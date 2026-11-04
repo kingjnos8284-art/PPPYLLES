@@ -1,12 +1,13 @@
 // @ts-check
 import { BALANCE } from '../config/balance.js';
+import { hasSpecies } from '../config/species.js';
 
 /**
  * 存檔資料結構。所有會被存起來的東西都在這裡，
  * 日後換成伺服器存檔時，整包 GameState 就是要上傳的內容。
  */
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 /**
  * @typedef {Object} FishData
@@ -78,10 +79,26 @@ export function createNewState(now) {
 export function migrate(raw) {
   if (!raw || typeof raw !== 'object') return null;
   if (typeof raw.version !== 'number') return null;
-  // 範例：if (raw.version === 1) { raw.newField = ...; raw.version = 2; }
   if (raw.version > SAVE_VERSION) return null; // 比程式還新的存檔，不認得
   raw.decor ??= { owned: [], placed: [] };
   raw.account ??= { userId: null };
   raw.memorial ??= [];
+
+  // v1 → v2：生物名單改為水母為主。已移除的種類換成星光水母（保留品質與年齡），圖鑑只留現有種類
+  if (raw.version === 1) {
+    for (const f of raw.fish ?? []) {
+      if (!hasSpecies(f.species)) f.species = 'star_blue';
+    }
+    raw.version = 2;
+  }
+  // 保險：任何不認得的種類都清掉，避免畫面出錯
+  raw.fish = (raw.fish ?? []).filter((/** @type {any} */ f) => hasSpecies(f.species));
+  for (const k of Object.keys(raw.codex ?? {})) if (!hasSpecies(k)) delete raw.codex[k];
+  for (const f of raw.fish) {
+    const e = (raw.codex[f.species] ??= { qualities: [], raised: 0 });
+    if (!e.qualities.includes(f.quality)) e.qualities.push(f.quality);
+    e.raised = Math.max(e.raised, 1);
+  }
+  raw.memorial = raw.memorial.filter((/** @type {any} */ m) => hasSpecies(m.species));
   return /** @type {GameState} */ (raw);
 }

@@ -14,7 +14,13 @@ export function el(tag, props = {}, children = []) {
   for (const [k, v] of Object.entries(props)) {
     if (v == null || v === false) continue;
     if (k === 'class') node.className = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
+    else if (k === 'style' && typeof v === 'object') {
+      for (const [sk, sv] of Object.entries(v)) {
+        // CSS 變數（--qc 等）必須用 setProperty 才會生效
+        if (sk.startsWith('--')) node.style.setProperty(sk, String(sv));
+        else /** @type {any} */ (node.style)[sk] = sv;
+      }
+    }
     else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
     else if (k === 'text') node.textContent = v;
     else node.setAttribute(k, String(v));

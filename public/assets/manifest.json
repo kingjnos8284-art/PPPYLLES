@@ -2,20 +2,48 @@
   "background": {
     "src": "bg/room-landscape-v1.webp",
     "layout": {
-      "tank": { "x0": 0.222, "y0": 0.095, "x1": 0.962, "y1": 0.705, "r": 0.02 },
-      "swim": { "x0": 0.25, "y0": 0.15, "x1": 0.935, "y1": 0.62 },
+      "tank": {
+        "x0": 0.222,
+        "y0": 0.095,
+        "x1": 0.962,
+        "y1": 0.705,
+        "r": 0.02
+      },
+      "swim": {
+        "x0": 0.25,
+        "y0": 0.15,
+        "x1": 0.935,
+        "y1": 0.62
+      },
       "floorY": 0.855,
-      "floorX": [0.04, 0.97],
+      "floorX": [
+        0.04,
+        0.97
+      ],
       "focusX": 0.59
     }
   },
   "backgroundPortrait": {
     "src": "bg/room-portrait-v1.webp",
     "layout": {
-      "tank": { "x0": 0.02, "y0": 0.06, "x1": 0.985, "y1": 0.783, "r": 0.045 },
-      "swim": { "x0": 0.05, "y0": 0.12, "x1": 0.955, "y1": 0.70 },
+      "tank": {
+        "x0": 0.02,
+        "y0": 0.06,
+        "x1": 0.985,
+        "y1": 0.783,
+        "r": 0.045
+      },
+      "swim": {
+        "x0": 0.05,
+        "y0": 0.12,
+        "x1": 0.955,
+        "y1": 0.7
+      },
       "floorY": 0.797,
-      "floorX": [0.25, 0.97],
+      "floorX": [
+        0.25,
+        0.97
+      ],
       "focusX": 0.5
     }
   },
@@ -25,14 +53,129 @@
     "lightRays": false
   },
   "fish": {
-    "guppy": null,
-    "neon": null,
+    "tropical": null,
     "clown": null,
-    "angel": null,
-    "betta": null,
-    "discus": null,
-    "arowana": null,
-    "jelly": null
+    "puffer": null,
+    "star_blue": {
+      "src": "jelly/star_blue-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/star_blue-thumb-v1.webp"
+    },
+    "sakura": {
+      "src": "jelly/sakura-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/sakura-thumb-v1.webp"
+    },
+    "saturn": {
+      "src": "jelly/saturn-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/saturn-thumb-v1.webp"
+    },
+    "crescent": {
+      "src": "jelly/crescent-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/crescent-thumb-v1.webp"
+    },
+    "angel": {
+      "src": "jelly/angel-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/angel-thumb-v1.webp"
+    },
+    "flame": {
+      "src": "jelly/flame-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/flame-thumb-v1.webp"
+    },
+    "leaf": {
+      "src": "jelly/leaf-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/leaf-thumb-v1.webp"
+    },
+    "crystal": {
+      "src": "jelly/crystal-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/crystal-thumb-v1.webp"
+    },
+    "heart": {
+      "src": "jelly/heart-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/heart-thumb-v1.webp"
+    },
+    "constellation": {
+      "src": "jelly/constellation-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/constellation-thumb-v1.webp"
+    },
+    "amethyst": {
+      "src": "jelly/amethyst-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/amethyst-thumb-v1.webp"
+    },
+    "flower_garden": {
+      "src": "jelly/flower_garden-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/flower_garden-thumb-v1.webp"
+    },
+    "rainbow": {
+      "src": "jelly/rainbow-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/rainbow-thumb-v1.webp"
+    },
+    "snowflake": {
+      "src": "jelly/snowflake-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/snowflake-thumb-v1.webp"
+    },
+    "golden_star": {
+      "src": "jelly/golden_star-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "thumb": "jelly/golden_star-thumb-v1.webp"
+    }
   },
   "landPets": {
     "crab": null,

@@ -287,6 +287,11 @@ export class Scene {
     f.retarget = this.time + 4 + Math.random() * 8;
   }
 
+  /** 實際身體大小（動畫圖四周有留白） @param {FishEnt} f */
+  bodySize(f) {
+    return this.assets.fish[f.species] ? f.L * 0.6 : f.L * 0.8;
+  }
+
   /** 讓畫面上的魚與存檔資料一致 */
   sync() {
     const state = this.getState();
@@ -315,6 +320,7 @@ export class Scene {
         this.fish.set(d.uid, e);
       }
       e.L = getSpecies(d.species).size * this.unit * growthScale(d);
+      this.assets.requestFish(d.species);
     }
     for (const e of this.fish.values()) {
       if (!seen.has(e.uid) && e.dying < 0) e.dying = this.time;
@@ -373,6 +379,25 @@ export class Scene {
           x: f.x, y: f.y - f.L * 0.2, vx: (Math.random() - 0.5) * 8, vy: -18,
           t: 0, kind: 'spark', color: '#ffd25e',
         });
+      }
+    }
+
+    // 彼此保持距離，避免擠成一團（只輕輕推開，不影響原本的游動方向）
+    const alive = [...this.fish.values()].filter((f) => f.dying < 0);
+    for (let i = 0; i < alive.length; i++) {
+      for (let j = i + 1; j < alive.length; j++) {
+        const a = alive[i], b = alive[j];
+        const min = (this.bodySize(a) + this.bodySize(b)) * 0.5;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d = Math.hypot(dx, dy) || 0.01;
+        if (d < min) {
+          const push = (min - d) * Math.min(1, dt * 2.5);
+          const ux = dx / d, uy = dy / d;
+          a.x -= ux * push * 0.5; a.y -= uy * push * 0.5;
+          b.x += ux * push * 0.5; b.y += uy * push * 0.5;
+          // 改變目標，讓牠們自然散開
+          if (d < min * 0.6) { this.pickTarget(a); this.pickTarget(b); }
+        }
       }
     }
 
@@ -563,21 +588,23 @@ export class Scene {
     ctx.translate(f.x, f.y);
     ctx.globalAlpha = alpha;
 
-    // 品質光暈（紫、金、紅）
+    const sprite = this.assets.fish[f.species];
+    // 品質光暈（紫、金、紅）；動畫圖四周有留白，光暈改以實際身體大小計算
+    const AL = sprite ? L * 0.62 : L;
     if (q.aura && f.dying < 0) {
       const pulse = 0.28 + 0.1 * Math.sin(t * 2.5 + f.phase);
-      const rg = ctx.createRadialGradient(0, 0, L * 0.1, 0, 0, L * 0.95);
+      const rg = ctx.createRadialGradient(0, 0, AL * 0.1, 0, 0, AL * 0.95);
       rg.addColorStop(0, hexA(q.color, pulse));
       rg.addColorStop(1, hexA(q.color, 0));
       ctx.fillStyle = rg;
       ctx.beginPath();
-      ctx.arc(0, 0, L * 0.95, 0, Math.PI * 2);
+      ctx.arc(0, 0, AL * 0.95, 0, Math.PI * 2);
       ctx.fill();
       if (q.id === 'red' || q.id === 'gold') {
         for (let i = 0; i < 3; i++) {
           const a = t * 1.5 + i * 2.1 + f.phase;
           ctx.beginPath();
-          ctx.arc(Math.cos(a) * L * 0.6, Math.sin(a) * L * 0.35, 1.8, 0, Math.PI * 2);
+          ctx.arc(Math.cos(a) * AL * 0.6, Math.sin(a) * AL * 0.35, 1.8, 0, Math.PI * 2);
           ctx.fillStyle = hexA(q.color, 0.9);
           ctx.fill();
         }
@@ -587,7 +614,7 @@ export class Scene {
     // 選取框
     if (this.selectedUid === f.uid) {
       ctx.beginPath();
-      ctx.arc(0, 0, Math.max(L * 0.65, 18), 0, Math.PI * 2);
+      ctx.arc(0, 0, Math.max(AL * 0.65, 18), 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(255,255,255,.7)';
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1.5;
@@ -603,7 +630,6 @@ export class Scene {
     if (f.dying >= 0) ctx.rotate(Math.min(Math.PI, (t - f.dying) * 1.5));
     if (data && stageOf(data) === 'elder') ctx.globalAlpha = alpha * 0.85;
 
-    const sprite = this.assets.fish[f.species];
     if (sprite) {
       drawSprite(ctx, sprite, L, t + f.phase);
     } else {
@@ -721,7 +747,7 @@ export class Scene {
     for (const f of this.fish.values()) {
       if (f.dying >= 0) continue;
       const d = Math.hypot(x - f.x, y - f.y);
-      const r = Math.max(f.L * 0.6, 24);
+      const r = Math.max(f.L * (this.assets.fish[f.species] ? 0.38 : 0.6), 24);
       if (d < r && d < bestD) { best = f; bestD = d; }
     }
     return best ? { kind: 'fish', uid: best.uid } : null;

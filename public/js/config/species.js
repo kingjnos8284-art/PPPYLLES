@@ -1,20 +1,23 @@
 // @ts-check
 /**
- * 魚種設定（水中寵物）。新增魚種只要在這裡加一筆，圖鑑和商店會自動出現。
+ * 水中寵物設定（水母為主角，小魚為配角）。
+ * 新增種類只要在這裡加一筆，並在 /assets/manifest.json 登記美術，商店與圖鑑會自動出現。
  *
- * price      購買魚苗價格
- * income     成魚、灰色品質時每秒產出的資源
- * adultMin   從幼魚長到成魚需要的分鐘數
+ * kind       'jelly' 水母 / 'fish' 小魚
+ * price      購買價格
+ * income     成年、灰色品質時每秒產出的資源
+ * adultMin   從幼體長到成年需要的分鐘數
  * lifeHours  基本壽命（小時，會再乘上品質的 lifeMult）
- * size       成魚時的顯示長度（基準單位，畫面會依螢幕大小縮放）
+ * size       成年時的顯示大小（基準單位；水母為整格動畫圖的寬度）
  * speed      游動速度
- * shape      占位圖形：fish / tall / round / long / jelly（有正式美術後就不使用）
+ * shape      無美術時的占位圖形
  * colors     占位圖用的 [主色, 輔色]
  */
 
 /**
  * @typedef {Object} Species
  * @property {string} id
+ * @property {'jelly'|'fish'} kind
  * @property {string} name
  * @property {string} desc
  * @property {number} price
@@ -29,51 +32,109 @@
 
 /** @type {Species[]} */
 export const SPECIES = [
+  // ===== 水母 =====
   {
-    id: 'guppy', name: '孔雀魚', desc: '最常見的入門魚，尾巴像小小的扇子，數量多了會很熱鬧。',
-    price: 20, income: 0.1, adultMin: 5, lifeHours: 36, size: 34, speed: 60,
-    shape: 'fish', colors: ['#ff9f43', '#5ad1ff'],
+    id: 'star_blue', kind: 'jelly', name: '星光水母', desc: '傘上閃著一顆小星星，是每座水族箱最初的夥伴。',
+    price: 50, income: 0.2, adultMin: 5, lifeHours: 48, size: 105, speed: 16,
+    shape: 'jelly', colors: ['#7fb2ff', '#cfe3ff'],
   },
   {
-    id: 'neon', name: '霓虹燈魚', desc: '身上有一道會發光的藍色條紋，喜歡成群游動。',
-    price: 60, income: 0.25, adultMin: 15, lifeHours: 48, size: 30, speed: 75,
-    shape: 'fish', colors: ['#3fd0ff', '#ff4f6d'],
+    id: 'sakura', kind: 'jelly', name: '櫻花水母', desc: '傘頂開著一朵櫻花，漂浮時像花瓣在水中飛舞。',
+    price: 150, income: 0.6, adultMin: 15, lifeHours: 60, size: 108, speed: 16,
+    shape: 'jelly', colors: ['#ff9ec7', '#ffe0ee'],
   },
   {
-    id: 'clown', name: '小丑魚', desc: '橘白相間的經典海水魚，個性活潑。',
-    price: 150, income: 0.6, adultMin: 30, lifeHours: 72, size: 44, speed: 55,
+    id: 'leaf', kind: 'jelly', name: '綠葉水母', desc: '觸手長成了葉子的模樣，看起來就像一株會游泳的植物。',
+    price: 300, income: 1.1, adultMin: 25, lifeHours: 60, size: 110, speed: 15,
+    shape: 'jelly', colors: ['#7ad968', '#d8ffc9'],
+  },
+  {
+    id: 'flame', kind: 'jelly', name: '烈焰水母', desc: '全身像火焰般溫暖發亮，在水裡也不會熄滅。',
+    price: 600, income: 2, adultMin: 40, lifeHours: 72, size: 112, speed: 17,
+    shape: 'jelly', colors: ['#ff6a2b', '#ffd27a'],
+  },
+  {
+    id: 'heart', kind: 'jelly', name: '愛心水母', desc: '傘上有一顆粉紅愛心，據說看到牠的人會有好心情。',
+    price: 1200, income: 3.8, adultMin: 60, lifeHours: 72, size: 115, speed: 15,
+    shape: 'jelly', colors: ['#ff8fc0', '#ffd6e8'],
+  },
+  {
+    id: 'snowflake', kind: 'jelly', name: '冰雪水母', desc: '傘上印著一片雪花，靠近時好像能感覺到一絲涼意。',
+    price: 2200, income: 6.5, adultMin: 90, lifeHours: 84, size: 115, speed: 14,
+    shape: 'jelly', colors: ['#8ec9ff', '#eef7ff'],
+  },
+  {
+    id: 'amethyst', kind: 'jelly', name: '紫晶水母', desc: '紫水晶般的身體，在光線下會折射出點點星芒。',
+    price: 4000, income: 11, adultMin: 120, lifeHours: 96, size: 118, speed: 14,
+    shape: 'jelly', colors: ['#9b7bff', '#e3d9ff'],
+  },
+  {
+    id: 'crescent', kind: 'jelly', name: '月夜水母', desc: '傘裡藏著一彎新月和夜空，總是安靜地漂浮。',
+    price: 7000, income: 18, adultMin: 180, lifeHours: 96, size: 118, speed: 13,
+    shape: 'jelly', colors: ['#5a3fd1', '#c9b8ff'],
+  },
+  {
+    id: 'constellation', kind: 'jelly', name: '星座水母', desc: '傘上連成一組小小的星座，像把夜空帶進了水族箱。',
+    price: 12000, income: 29, adultMin: 240, lifeHours: 108, size: 120, speed: 13,
+    shape: 'jelly', colors: ['#2a46c9', '#bcd0ff'],
+  },
+  {
+    id: 'flower_garden', kind: 'jelly', name: '花園水母', desc: '觸手上開滿小白花，走到哪裡都是一座花園。',
+    price: 20000, income: 46, adultMin: 300, lifeHours: 120, size: 125, speed: 12,
+    shape: 'jelly', colors: ['#a9b8ff', '#ffffff'],
+  },
+  {
+    id: 'saturn', kind: 'jelly', name: '土星水母', desc: '身邊繞著一圈金色光環，是來自遙遠星球的訪客。',
+    price: 33000, income: 72, adultMin: 420, lifeHours: 132, size: 130, speed: 12,
+    shape: 'jelly', colors: ['#ffc65c', '#fff0c2'],
+  },
+  {
+    id: 'crystal', kind: 'jelly', name: '水晶水母', desc: '由透明水晶構成的神祕水母，觸手是一顆顆冰晶。',
+    price: 55000, income: 115, adultMin: 540, lifeHours: 144, size: 130, speed: 11,
+    shape: 'jelly', colors: ['#7ec8ff', '#e6f6ff'],
+  },
+  {
+    id: 'rainbow', kind: 'jelly', name: '彩虹水母', desc: '傘上流動著七彩光芒，非常難得一見。',
+    price: 90000, income: 180, adultMin: 720, lifeHours: 156, size: 132, speed: 11,
+    shape: 'jelly', colors: ['#ff9be6', '#b3f5ff'],
+  },
+  {
+    id: 'angel', kind: 'jelly', name: '天使水母', desc: '頭戴光環、背有羽翼，傳說會守護整座水族箱。',
+    price: 150000, income: 290, adultMin: 900, lifeHours: 168, size: 135, speed: 10,
+    shape: 'jelly', colors: ['#ffffff', '#e9e1ff'],
+  },
+  {
+    id: 'golden_star', kind: 'jelly', name: '金曜水母', desc: '全身閃耀金色光輝的傳說水母，帶著小星星一起漂浮。',
+    price: 250000, income: 460, adultMin: 1080, lifeHours: 168, size: 135, speed: 10,
+    shape: 'jelly', colors: ['#ffc83d', '#fff1b8'],
+  },
+  // ===== 小魚 =====
+  {
+    id: 'tropical', kind: 'fish', name: '熱帶魚', desc: '色彩鮮豔的小小熱帶魚，總是精神飽滿地游來游去。',
+    price: 15, income: 0.08, adultMin: 5, lifeHours: 36, size: 40, speed: 60,
+    shape: 'fish', colors: ['#2f7de1', '#ffd23f'],
+  },
+  {
+    id: 'clown', kind: 'fish', name: '小丑魚', desc: '橘白相間的經典海水魚，個性活潑。',
+    price: 40, income: 0.2, adultMin: 10, lifeHours: 48, size: 44, speed: 55,
     shape: 'fish', colors: ['#ff7a1a', '#ffffff'],
   },
   {
-    id: 'angel', name: '神仙魚', desc: '身形高挑優雅，緩慢地在水草間穿梭。',
-    price: 400, income: 1.5, adultMin: 60, lifeHours: 72, size: 56, speed: 40,
-    shape: 'tall', colors: ['#e8eef5', '#2b3a55'],
+    id: 'puffer', kind: 'fish', name: '河豚', desc: '圓滾滾的小河豚，受到驚嚇時會鼓成一顆球。',
+    price: 100, income: 0.45, adultMin: 20, lifeHours: 60, size: 46, speed: 35,
+    shape: 'round', colors: ['#f2d16b', '#8a6a3a'],
   },
-  {
-    id: 'betta', name: '鬥魚', desc: '擁有華麗長鰭的獨行俠，鰭的顏色非常鮮豔。',
-    price: 900, income: 3, adultMin: 120, lifeHours: 96, size: 54, speed: 35,
-    shape: 'fish', colors: ['#c2185b', '#7c4dff'],
-  },
-  {
-    id: 'discus', name: '七彩神仙', desc: '圓盤般的身體帶著彩色花紋，被稱為熱帶魚之王。',
-    price: 2500, income: 7, adultMin: 240, lifeHours: 120, size: 64, speed: 32,
-    shape: 'round', colors: ['#ff6b4a', '#2ec4b6'],
-  },
-  {
-    id: 'arowana', name: '龍魚', desc: '修長的身軀覆蓋著金屬光澤的鱗片，象徵好運。',
-    price: 8000, income: 20, adultMin: 480, lifeHours: 168, size: 120, speed: 30,
-    shape: 'long', colors: ['#d9b44a', '#8a5a1c'],
-  },
-  {
-    id: 'jelly', name: '月亮水母', desc: '半透明的身體隨水流一張一縮，看著就很放鬆。',
-    price: 20000, income: 45, adultMin: 720, lifeHours: 168, size: 60, speed: 18,
-    shape: 'jelly', colors: ['#b8e6ff', '#ff9ad5'],
-  },
+
 ];
+
+/** @param {string} id */
+export function hasSpecies(id) {
+  return SPECIES.some((x) => x.id === id);
+}
 
 /** @param {string} id */
 export function getSpecies(id) {
   const s = SPECIES.find((x) => x.id === id);
-  if (!s) throw new Error(`未知的魚種：${id}`);
+  if (!s) throw new Error(`未知的種類：${id}`);
   return s;
 }

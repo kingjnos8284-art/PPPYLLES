@@ -102,7 +102,7 @@ async function boot() {
   $('boot').classList.add('done');
   setTimeout(() => $('boot').remove(), 600);
   if (!saved) {
-    setTimeout(() => toast('歡迎來到你的水族箱！點擊魚或寄居蟹看看'), 900);
+    setTimeout(() => toast('歡迎來到你的水族箱！點擊水母或寄居蟹看看'), 900);
   }
 }
 

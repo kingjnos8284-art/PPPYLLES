@@ -11,5 +11,5 @@ const tank = $('hud-tank');
 export function updateHud(state) {
   coinValue.textContent = fmt(state.coins);
   coinRate.textContent = `+${fmtRate(totalIncome(state))}/秒`;
-  tank.textContent = `魚 ${state.fish.length}/${BALANCE.tankCapacity}`;
+  tank.textContent = `水族 ${state.fish.length}/${BALANCE.tankCapacity}`;
 }

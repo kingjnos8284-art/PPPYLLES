@@ -5,8 +5,12 @@
  * 素材清單寫在 /assets/manifest.json。某個項目是 null 或圖片讀取失敗時，
  * 遊戲會自動使用程式畫的占位圖，所以美術可以一張一張慢慢補上。
  *
- * 項目格式：{ "src": "fish/guppy.png", "frames": 1, "fps": 8 }
- *   frames > 1 時，圖片視為「橫向排列的連續動畫格」。
+ * 項目格式：{ "src": "jelly/star_blue-v1.webp", "cols": 6, "rows": 4, "frames": 24, "fps": 10,
+ *            "thumb": "jelly/star_blue-thumb-v1.webp" }
+ *   cols × rows 為動畫圖集的格數（由左到右、由上到下播放）；只有一列時可只寫 frames。
+ *   thumb 為商店／圖鑑用的小圖（選用）。
+ *
+ * 水中寵物的動畫圖集較大，採「用到才下載」：只有水族箱裡有這個種類時才載入。
  */
 
 /**
@@ -14,6 +18,7 @@
  * @property {HTMLImageElement} img
  * @property {number} frames
  * @property {number} fps
+ * @property {number} cols
  * @property {number} fw   單格寬
  * @property {number} fh   單格高
  * @property {BgLayout|null} layout  背景圖專用：水族箱與地板位置
@@ -35,7 +40,9 @@
  * @property {SpriteEntry|null} backgroundPortrait  直向（手機）背景
  * @property {SpriteEntry|null} sand
  * @property {{ plants: boolean, lightRays: boolean }} effects  背景已畫了水草／光束時可關閉程式產生的版本
- * @property {Record<string, SpriteEntry>} fish
+ * @property {Record<string, SpriteEntry>} fish       已載入的水中寵物動畫（用到才載入）
+ * @property {Record<string, HTMLImageElement>} thumbs  水中寵物小圖
+ * @property {(id: string) => void} requestFish     要求載入某個種類的動畫
  * @property {Record<string, SpriteEntry>} landPets
  * @property {Record<string, SpriteEntry>} decor
  */
@@ -59,9 +66,12 @@ async function loadEntry(e) {
     console.warn('[assets] 無法載入', e.src, '，改用占位圖');
     return null;
   }
-  const frames = Math.max(1, e.frames | 0 || 1);
+  const cols = Math.max(1, e.cols | 0 || e.frames | 0 || 1);
+  const rows = Math.max(1, e.rows | 0 || 1);
+  const frames = Math.max(1, Math.min(cols * rows, e.frames | 0 || cols * rows));
   return {
-    img, frames, fps: e.fps || 8, fw: img.naturalWidth / frames, fh: img.naturalHeight,
+    img, frames, cols, fps: e.fps || 8,
+    fw: img.naturalWidth / cols, fh: img.naturalHeight / rows,
     layout: e.layout ?? null,
   };
 }
@@ -86,19 +96,35 @@ export async function loadAssets() {
     const res = await fetch('/assets/manifest.json', { cache: 'no-cache' });
     if (res.ok) manifest = await res.json();
   } catch { /* 沒有清單就全部用占位圖 */ }
-  const [background, backgroundPortrait, sand, fish, landPets, decor] = await Promise.all([
+  const fishDefs = manifest.fish ?? {};
+  /** @type {Record<string, HTMLImageElement>} */
+  const thumbs = {};
+  const [background, backgroundPortrait, sand, landPets, decor] = await Promise.all([
     loadEntry(manifest.background),
     loadEntry(manifest.backgroundPortrait),
     loadEntry(manifest.sand),
-    loadGroup(manifest.fish),
     loadGroup(manifest.landPets),
     loadGroup(manifest.decor),
+    ...Object.entries(fishDefs).map(async ([k, v]) => {
+      if (!v || typeof v.thumb !== 'string') return;
+      const img = await loadImage('/assets/' + v.thumb);
+      if (img) thumbs[k] = img;
+    }),
   ]);
   const effects = {
     plants: manifest.effects?.plants !== false,
     lightRays: manifest.effects?.lightRays !== false,
   };
-  return { background, backgroundPortrait, sand, fish, landPets, decor, effects };
+  /** @type {Record<string, SpriteEntry>} */
+  const fish = {};
+  const pending = new Set();
+  /** @param {string} id */
+  const requestFish = (id) => {
+    if (fish[id] || pending.has(id) || !fishDefs[id]) return;
+    pending.add(id);
+    loadEntry(fishDefs[id]).then((e) => { if (e) fish[id] = e; });
+  };
+  return { background, backgroundPortrait, sand, fish, thumbs, requestFish, landPets, decor, effects };
 }
 
 /**
@@ -109,9 +135,11 @@ export async function loadAssets() {
  * @param {number} time 秒
  */
 export function drawSprite(ctx, e, width, time) {
-  const frame = e.frames > 1 ? Math.floor(time * e.fps) % e.frames : 0;
+  const frame = e.frames > 1 ? Math.floor(Math.max(0, time) * e.fps) % e.frames : 0;
+  const sx = (frame % e.cols) * e.fw;
+  const sy = Math.floor(frame / e.cols) * e.fh;
   const h = width * (e.fh / e.fw);
-  ctx.drawImage(e.img, frame * e.fw, 0, e.fw, e.fh, -width / 2, -h / 2, width, h);
+  ctx.drawImage(e.img, sx, sy, e.fw, e.fh, -width / 2, -h / 2, width, h);
 }
 
 /**
