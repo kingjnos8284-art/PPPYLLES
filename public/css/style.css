@@ -303,7 +303,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (max-height: 460px) {
   :root { --dock-h: 52px; }
   .dock-btn span:last-child { display: none; }
-  .hud-dock { bottom: calc(var(--safe-bottom) + 6px); }
+  /* 橫拿手機時，地板空間很少，選單移到上方中央，避免蓋住陸地寵物 */
+  .hud-dock { bottom: auto; top: calc(var(--safe-top) + 8px); padding: 4px; border-radius: 18px; }
+  .dock-btn { width: 52px; }
+  .dock-ico { width: 22px; height: 22px; }
 }
 
 @keyframes fade { from { opacity: 0 } }

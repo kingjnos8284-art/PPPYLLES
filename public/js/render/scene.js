@@ -86,6 +86,15 @@ export class Scene {
     /** @type {number|null} */
     this.selectedUid = null;
 
+    /** @type {import('./assets.js').SpriteEntry|null} 目前使用的背景 */
+    this.bgEntry = null;
+    /** @type {{dx:number,dy:number,s:number}|null} 背景圖在畫面上的位置與縮放 */
+    this.bgPlace = null;
+    /** @type {{x:number,y:number,w:number,h:number,r:number}|null} 水族箱水域（魚只畫在裡面） */
+    this.tankClip = null;
+    this.petRange = { min: 40, max: 400 };
+    this.petUnit = 1;
+
     this.bg = document.createElement('canvas');
     this.time = 0;
     this.resize();
@@ -100,17 +109,53 @@ export class Scene {
     this.canvas.width = Math.round(w * dpr);
     this.canvas.height = Math.round(h * dpr);
 
-    // 手機上魚也要夠大看得清楚：以短邊為基準縮放
-    this.unit = Math.max(0.85, Math.min(1.6, Math.min(w, h) / 440));
-    const sandH = Math.max(110, Math.min(200, h * 0.18));
-    this.sandTop = h - sandH;
-    this.petY = this.sandTop + Math.min(34, sandH * 0.28);
-    this.swim = {
-      left: 24,
-      right: w - 24,
-      top: Math.min(90, h * 0.14),
-      bottom: this.sandTop - 14 * this.unit,
-    };
+    const portrait = h > w;
+    this.bgEntry = (portrait ? this.assets.backgroundPortrait : this.assets.background)
+      ?? this.assets.background ?? this.assets.backgroundPortrait;
+    this.bgPlace = null;
+    this.tankClip = null;
+    this.petRange = { min: 40, max: w - 40 };
+
+    const layout = this.bgEntry?.layout;
+    if (this.bgEntry && layout) {
+      // 背景圖有版面設定：魚游在圖中的水族箱裡，陸地寵物走在地板上
+      const iw = this.bgEntry.img.naturalWidth;
+      const ih = this.bgEntry.img.naturalHeight;
+      const s = Math.max(w / iw, h / ih);
+      const dw = iw * s, dh = ih * s;
+      const dx = clamp(w / 2 - layout.focusX * dw, w - dw, 0);
+      const dy = (h - dh) / 2;
+      this.bgPlace = { dx, dy, s };
+      const X = (/** @type {number} */ u) => dx + u * dw;
+      const Y = (/** @type {number} */ v) => dy + v * dh;
+      const t = layout.tank;
+      this.tankClip = { x: X(t.x0), y: Y(t.y0), w: X(t.x1) - X(t.x0), h: Y(t.y1) - Y(t.y0), r: t.r * dw };
+      this.swim = {
+        left: Math.max(X(layout.swim.x0), 16),
+        right: Math.min(X(layout.swim.x1), w - 16),
+        top: Y(layout.swim.y0),
+        bottom: Y(layout.swim.y1),
+      };
+      this.unit = Math.max(0.8, Math.min(1.8, (this.swim.bottom - this.swim.top) / 330));
+      // 房間場景中，陸地寵物站在地板上，相對魚要大一些
+      this.petUnit = this.unit * Math.max(0.9, Math.min(1.5, w / 700));
+      this.sandTop = this.swim.bottom;
+      this.petY = Y(layout.floorY);
+      this.petRange = { min: Math.max(X(layout.floorX[0]), 30), max: Math.min(X(layout.floorX[1]), w - 30) };
+    } else {
+      // 手機上魚也要夠大看得清楚：以短邊為基準縮放
+      this.unit = Math.max(0.85, Math.min(1.6, Math.min(w, h) / 440));
+      this.petUnit = this.unit;
+      const sandH = Math.max(110, Math.min(200, h * 0.18));
+      this.sandTop = h - sandH;
+      this.petY = this.sandTop + Math.min(34, sandH * 0.28);
+      this.swim = {
+        left: 24,
+        right: w - 24,
+        top: Math.min(90, h * 0.14),
+        bottom: this.sandTop - 14 * this.unit,
+      };
+    }
 
     this.buildBackground();
     this.buildPlants();
@@ -120,7 +165,7 @@ export class Scene {
       f.y = clamp(f.y, this.swim.top, this.swim.bottom);
       this.pickTarget(f);
     }
-    for (const p of this.pets.values()) p.x = clamp(p.x, 40, w - 40);
+    for (const p of this.pets.values()) p.x = clamp(p.x, this.petRange.min, this.petRange.max);
   }
 
   buildBackground() {
@@ -131,11 +176,13 @@ export class Scene {
     const g = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d'));
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const portrait = h > w;
-    const bgEntry = (portrait ? this.assets.backgroundPortrait : this.assets.background)
-      ?? this.assets.background ?? this.assets.backgroundPortrait;
-    // 背景圖底部對齊，確保沙地永遠在畫面下方
-    if (bgEntry) {
+    const bgEntry = this.bgEntry;
+    if (bgEntry && this.bgPlace) {
+      const { dx, dy, s } = this.bgPlace;
+      g.imageSmoothingQuality = 'high';
+      g.drawImage(bgEntry.img, dx, dy, bgEntry.img.naturalWidth * s, bgEntry.img.naturalHeight * s);
+    } else if (bgEntry) {
+      // 沒有版面設定的背景：底部對齊，確保沙地永遠在畫面下方
       drawCover(g, bgEntry.img, 0, 0, w, h, 1);
     } else {
       // 水
@@ -277,7 +324,7 @@ export class Scene {
       if (!this.pets.has(p.type)) {
         this.pets.set(p.type, {
           type: p.type,
-          x: 60 + Math.random() * (this.w - 120),
+          x: this.petRange.min + Math.random() * (this.petRange.max - this.petRange.min),
           dir: Math.random() > 0.5 ? 1 : -1,
           walking: false,
           nextChange: this.time + 1 + Math.random() * 3,
@@ -336,19 +383,19 @@ export class Scene {
         p.nextChange = t + (p.walking ? 2 + Math.random() * 4 : 2 + Math.random() * 5);
       }
       if (p.walking) {
-        p.x += p.dir * lp.speed * this.unit * dt;
-        const margin = lp.size * this.unit * 0.6;
-        if (p.x < margin) { p.x = margin; p.dir = 1; }
-        if (p.x > this.w - margin) { p.x = this.w - margin; p.dir = -1; }
+        p.x += p.dir * lp.speed * this.petUnit * dt;
+        const half = lp.size * this.petUnit * 0.5;
+        if (p.x < this.petRange.min + half) { p.x = this.petRange.min + half; p.dir = 1; }
+        if (p.x > this.petRange.max - half) { p.x = this.petRange.max - half; p.dir = -1; }
       }
       p.hop = Math.max(0, p.hop - dt * 2.5);
     }
 
     // 氣泡
-    if (Math.random() < dt * (2 + this.w / 600)) {
+    if (Math.random() < dt * (1.5 + (this.swim.right - this.swim.left) / 700)) {
       const emit = [0.12, 0.47, 0.83][Math.floor(Math.random() * 3)];
       this.bubbles.push({
-        x: this.w * emit + (Math.random() - 0.5) * 30,
+        x: this.swim.left + (this.swim.right - this.swim.left) * emit + (Math.random() - 0.5) * 30,
         y: this.sandTop + 4,
         r: (1.5 + Math.random() * 4) * this.unit,
         v: 30 + Math.random() * 40,
@@ -359,7 +406,7 @@ export class Scene {
       b.y -= b.v * dt;
       b.x += Math.sin(t * 3 + b.ph) * 12 * dt;
     }
-    this.bubbles = this.bubbles.filter((b) => b.y > -10);
+    this.bubbles = this.bubbles.filter((b) => b.y > (this.tankClip ? this.tankClip.y : 0) - 10);
 
     for (const fl of this.floats) { fl.t += dt; fl.y -= 26 * dt; }
     this.floats = this.floats.filter((fl) => fl.t < 1.6);
@@ -378,6 +425,14 @@ export class Scene {
     ctx.drawImage(this.bg, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // 水族箱內（有版面設定時裁切在水域內）
+    ctx.save();
+    if (this.tankClip) {
+      const c = this.tankClip;
+      ctx.beginPath();
+      ctx.roundRect(c.x, c.y, c.w, c.h, c.r);
+      ctx.clip();
+    }
     if (this.assets.effects.lightRays) this.drawLightRays();
     if (this.assets.effects.plants) this.drawPlants(false);
     this.drawBubbles();
@@ -387,18 +442,21 @@ export class Scene {
     const list = [...this.fish.values()].sort((a, b) => a.L - b.L);
     const byUid = new Map(state.fish.map((f) => [f.uid, f]));
     for (const f of list) this.drawFish(f, byUid.get(f.uid));
+    if (this.assets.effects.plants) this.drawPlants(true);
+    ctx.restore();
 
     for (const p of [...this.pets.values()].sort((a, b) => a.x - b.x)) this.drawPet(p);
-    if (this.assets.effects.plants) this.drawPlants(true);
     this.drawParticles();
     this.drawFloats();
 
-    // 邊緣暗角，增加景深
-    const vg = ctx.createRadialGradient(w / 2, h * 0.45, Math.min(w, h) * 0.35, w / 2, h * 0.5, Math.max(w, h) * 0.8);
-    vg.addColorStop(0, 'rgba(0,0,0,0)');
-    vg.addColorStop(1, 'rgba(0,10,25,.35)');
-    ctx.fillStyle = vg;
-    ctx.fillRect(0, 0, w, h);
+    // 邊緣暗角，增加景深（只用在占位背景；正式美術保留原本色調）
+    if (!this.bgEntry) {
+      const vg = ctx.createRadialGradient(w / 2, h * 0.45, Math.min(w, h) * 0.35, w / 2, h * 0.5, Math.max(w, h) * 0.8);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(0,10,25,.35)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, w, h);
+    }
     void t;
   }
 
@@ -556,7 +614,7 @@ export class Scene {
   drawPet(p) {
     const { ctx } = this;
     const lp = getLandPet(p.type);
-    const S = lp.size * this.unit;
+    const S = lp.size * this.petUnit;
     const hop = Math.sin(p.hop * Math.PI) * S * 0.25;
     ctx.save();
     ctx.translate(p.x, this.petY - hop);
@@ -631,7 +689,7 @@ export class Scene {
     p.hop = 1;
     p.walking = false;
     p.nextChange = this.time + 2;
-    const S = getLandPet(type).size * this.unit;
+    const S = getLandPet(type).size * this.petUnit;
     const n = rewarded ? 5 : 2;
     for (let i = 0; i < n; i++) {
       this.particles.push({
@@ -651,7 +709,7 @@ export class Scene {
    */
   hitTest(x, y) {
     for (const p of this.pets.values()) {
-      const S = getLandPet(p.type).size * this.unit;
+      const S = getLandPet(p.type).size * this.petUnit;
       const r = Math.max(S * 0.55, 26);
       if (Math.hypot(x - p.x, y - (this.petY - S * 0.25)) < r) return { kind: 'pet', type: p.type };
     }

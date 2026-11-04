@@ -16,6 +16,17 @@
  * @property {number} fps
  * @property {number} fw   單格寬
  * @property {number} fh   單格高
+ * @property {BgLayout|null} layout  背景圖專用：水族箱與地板位置
+ */
+
+/**
+ * 背景圖的版面設定，所有數值都是「佔圖片寬／高的比例」(0~1)。
+ * @typedef {Object} BgLayout
+ * @property {{x0:number,y0:number,x1:number,y1:number,r:number}} tank  水族箱的水域（魚只會畫在這裡面，r 為圓角比例）
+ * @property {{x0:number,y0:number,x1:number,y1:number}} swim  魚的游動範圍
+ * @property {number} floorY        陸地寵物腳底所在高度
+ * @property {[number, number]} floorX  陸地寵物左右可走範圍
+ * @property {number} focusX        畫面太窄（手機直拿）時，以這個水平位置為中心裁切
  */
 
 /**
@@ -49,7 +60,10 @@ async function loadEntry(e) {
     return null;
   }
   const frames = Math.max(1, e.frames | 0 || 1);
-  return { img, frames, fps: e.fps || 8, fw: img.naturalWidth / frames, fh: img.naturalHeight };
+  return {
+    img, frames, fps: e.fps || 8, fw: img.naturalWidth / frames, fh: img.naturalHeight,
+    layout: e.layout ?? null,
+  };
 }
 
 /** @param {Record<string, any>|undefined} group */
