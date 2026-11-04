@@ -136,7 +136,9 @@ export class Scene {
         top: Y(layout.swim.y0),
         bottom: Y(layout.swim.y1),
       };
-      this.unit = Math.max(0.8, Math.min(1.8, (this.swim.bottom - this.swim.top) / 330));
+      this.unit = Math.max(0.8, Math.min(1.8,
+        (this.swim.bottom - this.swim.top) / 330,
+        (this.swim.right - this.swim.left) / 320));
       // 房間場景中，陸地寵物站在地板上，相對魚要大一些
       this.petUnit = this.unit * Math.max(0.9, Math.min(1.5, w / 700));
       this.sandTop = this.swim.bottom;

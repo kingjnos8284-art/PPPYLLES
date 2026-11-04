@@ -9,7 +9,16 @@
       "focusX": 0.59
     }
   },
-  "backgroundPortrait": null,
+  "backgroundPortrait": {
+    "src": "bg/room-portrait-v1.webp",
+    "layout": {
+      "tank": { "x0": 0.02, "y0": 0.06, "x1": 0.985, "y1": 0.783, "r": 0.045 },
+      "swim": { "x0": 0.05, "y0": 0.12, "x1": 0.955, "y1": 0.70 },
+      "floorY": 0.797,
+      "floorX": [0.25, 0.97],
+      "focusX": 0.5
+    }
+  },
   "sand": null,
   "effects": {
     "plants": false,
