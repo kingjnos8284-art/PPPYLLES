@@ -1,0 +1,39 @@
+# 純靜態網站，不需要建置步驟
+[build]
+  publish = "public"
+  command = ""
+  # 預留：日後的後端 API（帳號、存檔、好友）
+  functions = "netlify/functions"
+
+# /api/* 轉到 Netlify Functions（目前尚無函式，預留給後端）
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# 程式檔不使用雜湊檔名，因此要求瀏覽器每次確認是否有新版
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# 美術素材可以長時間快取；更新圖片時請換檔名（例如 guppy-v2.png）
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/assets/manifest.json"
+  [headers.values]
+    Cache-Control = "no-cache"

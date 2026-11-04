@@ -1,0 +1,25 @@
+{
+  "background": null,
+  "backgroundPortrait": null,
+  "sand": null,
+  "effects": {
+    "plants": true,
+    "lightRays": true
+  },
+  "fish": {
+    "guppy": null,
+    "neon": null,
+    "clown": null,
+    "angel": null,
+    "betta": null,
+    "discus": null,
+    "arowana": null,
+    "jelly": null
+  },
+  "landPets": {
+    "crab": null,
+    "turtle": null,
+    "capybara": null
+  },
+  "decor": {}
+}
