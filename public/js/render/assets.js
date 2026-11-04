@@ -9,6 +9,8 @@
  *            "thumb": "jelly/star_blue-thumb-v1.webp" }
  *   cols × rows 為動畫圖集的格數（由左到右、由上到下播放）；只有一列時可只寫 frames。
  *   thumb 為商店／圖鑑用的小圖（選用）。
+ *   hover 為停在原地時的動畫圖集（選用，例如小魚的懸浮動作）。
+ *   魚類圖必須「頭朝右」，往左游時遊戲會自動鏡像翻轉。
  *
  * 水中寵物的動畫圖集較大，採「用到才下載」：只有水族箱裡有這個種類時才載入。
  */
@@ -22,6 +24,7 @@
  * @property {number} fw   單格寬
  * @property {number} fh   單格高
  * @property {BgLayout|null} layout  背景圖專用：水族箱與地板位置
+ * @property {SpriteEntry|null} [hover]  停在原地時的動畫（選用，格式與主圖相同）
  */
 
 /**
@@ -69,10 +72,12 @@ async function loadEntry(e) {
   const cols = Math.max(1, e.cols | 0 || e.frames | 0 || 1);
   const rows = Math.max(1, e.rows | 0 || 1);
   const frames = Math.max(1, Math.min(cols * rows, e.frames | 0 || cols * rows));
+  const hover = typeof e.hover === 'string' ? await loadEntry({ ...e, src: e.hover, hover: undefined }) : null;
   return {
     img, frames, cols, fps: e.fps || 8,
     fw: img.naturalWidth / cols, fh: img.naturalHeight / rows,
     layout: e.layout ?? null,
+    hover,
   };
 }
 

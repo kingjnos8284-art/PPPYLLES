@@ -23,6 +23,7 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {number} face
  * @property {number} phase
  * @property {number} retarget
+ * @property {number} idleUntil  小魚停下來懸浮到這個時間
  * @property {number} speedMul
  * @property {number} nextSparkle
  * @property {number} born
@@ -280,6 +281,12 @@ export class Scene {
     if (sp.shape === 'jelly') {
       f.tx = clamp(f.x + (Math.random() - 0.5) * 120, s.left + 40, s.right - 40);
       f.ty = s.top + Math.random() * (s.bottom - s.top) * 0.8;
+    } else if (Math.random() < 0.3) {
+      // 偶爾停下來發呆（使用懸浮動畫）
+      f.tx = f.x; f.ty = f.y;
+      f.idleUntil = this.time + 2 + Math.random() * 3;
+      f.retarget = f.idleUntil;
+      return;
     } else {
       f.tx = s.left + Math.random() * (s.right - s.left);
       f.ty = s.top + Math.random() * (s.bottom - s.top);
@@ -309,6 +316,7 @@ export class Scene {
           face: Math.random() > 0.5 ? 1 : -1,
           phase: Math.random() * 10,
           retarget: 0,
+          idleUntil: 0,
           speedMul: 0.75 + Math.random() * 0.5,
           nextSparkle: this.time + 2 + Math.random() * 8,
           born: this.time,
@@ -358,7 +366,7 @@ export class Scene {
         continue;
       }
       const sp = getSpecies(f.species);
-      if (t > f.retarget || Math.hypot(f.tx - f.x, f.ty - f.y) < 16) this.pickTarget(f);
+      if (t > f.retarget || (t > f.idleUntil && Math.hypot(f.tx - f.x, f.ty - f.y) < 16)) this.pickTarget(f);
       const speed = sp.speed * this.unit * f.speedMul * (0.8 + 0.2 * Math.sin(t * 0.7 + f.phase));
       const dx = f.tx - f.x, dy = f.ty - f.y;
       const d = Math.hypot(dx, dy) || 1;
@@ -370,7 +378,7 @@ export class Scene {
       f.y += f.vy * dt;
       f.x = clamp(f.x, this.swim.left, this.swim.right);
       f.y = clamp(f.y, this.swim.top - 40, this.swim.bottom);
-      if (Math.abs(f.vx) > 3) f.face += (Math.sign(f.vx) - f.face) * Math.min(1, dt * 5);
+      if (Math.abs(f.vx) > 3) f.face += (Math.sign(f.vx) - f.face) * Math.min(1, dt * 8);
 
       // 小小的產出光點，表示「牠正在幫你累積資源」
       if (t > f.nextSparkle) {
@@ -624,14 +632,17 @@ export class Scene {
 
     if (sp.shape !== 'jelly') {
       const tilt = Math.atan2(f.vy, Math.abs(f.vx) + 20) * 0.6;
-      ctx.scale(f.face, 1);
+      // 轉身時不要壓成一條細線：寬度最少保留 30%
+      const fx = (f.face < 0 ? -1 : 1) * Math.max(0.3, Math.abs(f.face));
+      ctx.scale(fx, 1);
       ctx.rotate(tilt);
     }
     if (f.dying >= 0) ctx.rotate(Math.min(Math.PI, (t - f.dying) * 1.5));
     if (data && stageOf(data) === 'elder') ctx.globalAlpha = alpha * 0.85;
 
     if (sprite) {
-      drawSprite(ctx, sprite, L, t + f.phase);
+      const slow = Math.hypot(f.vx, f.vy) < sp.speed * this.unit * 0.3;
+      drawSprite(ctx, slow && sprite.hover ? sprite.hover : sprite, L, t + f.phase);
     } else {
       drawFishPlaceholder(ctx, sp, L, t + f.phase);
     }
