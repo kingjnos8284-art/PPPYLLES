@@ -93,6 +93,9 @@ async function boot() {
     },
   });
 
+  // 測試用：網址加上 ?debug 時可從主控台存取
+  if (location.search.includes('debug')) /** @type {any} */ (window).__game = { scene, get state() { return state; } };
+
   catchUp(now, true);
   updateHud(state);
   save();
@@ -102,7 +105,7 @@ async function boot() {
   $('boot').classList.add('done');
   setTimeout(() => $('boot').remove(), 600);
   if (!saved) {
-    setTimeout(() => toast('歡迎來到你的水族箱！點擊水母或寄居蟹看看'), 900);
+    setTimeout(() => toast('歡迎來到你的水族箱！點擊水母或貓咪看看'), 900);
   }
 }
 

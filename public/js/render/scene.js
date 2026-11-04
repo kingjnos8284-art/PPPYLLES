@@ -36,12 +36,38 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
 /**
  * @typedef {Object} PetEnt
  * @property {string} type
+ * @property {'cat'|'dog'} kind
  * @property {number} x
  * @property {number} dir
  * @property {boolean} walking
  * @property {number} nextChange
  * @property {number} hop
+ * @property {number} spot          背景指定位置的索引；-1 表示沒有位置（改在地板上走動）
+ * @property {string} pose          sit / lie / idle / sleep
+ * @property {number} poseUntil
+ * @property {number} interactAt    開始播放互動動畫的時間；-1 表示沒有
+ * @property {number} moveAt        換位置（淡出→淡入）開始的時間；-1 表示沒有
+ * @property {number} moveTo
+ * @property {number} phase
  */
+
+/**
+ * @typedef {Object} ScreenSpot
+ * @property {'cat'|'dog'} kind
+ * @property {number} x
+ * @property {number} y
+ * @property {number} face
+ * @property {number} size   動畫格寬度（px）
+ */
+
+/** 各種姿勢出現的機率與持續時間（秒） */
+const POSES = {
+  sit:   { weight: 3, min: 10, max: 22 },
+  lie:   { weight: 3, min: 12, max: 26 },
+  idle:  { weight: 2, min: 6,  max: 14 },
+  sleep: { weight: 3, min: 25, max: 60 },
+};
+const INTERACT_SEC = 1.2;
 
 /** 可預測的亂數（讓背景每次重繪都一樣） @param {number} seed */
 function seeded(seed) {
@@ -95,6 +121,8 @@ export class Scene {
     this.tankClip = null;
     this.petRange = { min: 40, max: 400 };
     this.petUnit = 1;
+    /** @type {ScreenSpot[]} 陸地寵物在畫面上的固定位置 */
+    this.spots = [];
 
     this.bg = document.createElement('canvas');
     this.time = 0;
@@ -116,6 +144,7 @@ export class Scene {
     this.bgPlace = null;
     this.tankClip = null;
     this.petRange = { min: 40, max: w - 40 };
+    this.spots = [];
 
     const layout = this.bgEntry?.layout;
     if (this.bgEntry && layout) {
@@ -145,6 +174,13 @@ export class Scene {
       this.sandTop = this.swim.bottom;
       this.petY = Y(layout.floorY);
       this.petRange = { min: Math.max(X(layout.floorX[0]), 30), max: Math.min(X(layout.floorX[1]), w - 30) };
+      if (layout.pets) {
+        const pl = layout.pets;
+        this.spots = pl.spots.map((sp) => ({
+          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face,
+          size: (sp.kind === 'cat' ? pl.catSize : pl.dogSize) * dw,
+        }));
+      }
     } else {
       // 手機上魚也要夠大看得清楚：以短邊為基準縮放
       this.unit = Math.max(0.85, Math.min(1.6, Math.min(w, h) / 440));
@@ -168,7 +204,12 @@ export class Scene {
       f.y = clamp(f.y, this.swim.top, this.swim.bottom);
       this.pickTarget(f);
     }
-    for (const p of this.pets.values()) p.x = clamp(p.x, this.petRange.min, this.petRange.max);
+    for (const p of this.pets.values()) {
+      p.x = clamp(p.x, this.petRange.min, this.petRange.max);
+      // 換了背景（例如手機轉向）後，重新分配位置
+      p.spot = -1;
+    }
+    for (const p of this.pets.values()) p.spot = this.freeSpot(p.kind, -1);
   }
 
   buildBackground() {
@@ -337,14 +378,24 @@ export class Scene {
     const petSeen = new Set();
     for (const p of state.landPets) {
       petSeen.add(p.type);
+      this.assets.requestPet(p.type);
       if (!this.pets.has(p.type)) {
+        const kind = getLandPet(p.type).kind;
         this.pets.set(p.type, {
           type: p.type,
+          kind,
           x: this.petRange.min + Math.random() * (this.petRange.max - this.petRange.min),
           dir: Math.random() > 0.5 ? 1 : -1,
           walking: false,
           nextChange: this.time + 1 + Math.random() * 3,
           hop: 0,
+          spot: this.freeSpot(kind, -1),
+          pose: this.randomPose(),
+          poseUntil: this.time + 5 + Math.random() * 10,
+          interactAt: -1,
+          moveAt: -1,
+          moveTo: -1,
+          phase: Math.random() * 10,
         });
       }
     }
@@ -412,6 +463,20 @@ export class Scene {
     // 陸地寵物
     for (const p of this.pets.values()) {
       const lp = getLandPet(p.type);
+      if (p.interactAt >= 0 && t - p.interactAt > INTERACT_SEC) p.interactAt = -1;
+      if (p.spot >= 0) {
+        // 有固定位置：在原地換姿勢；貓偶爾換到貓跳台的另一層
+        if (p.moveAt >= 0 && t - p.moveAt > 0.5 && p.moveTo >= 0) { p.spot = p.moveTo; p.moveTo = -1; }
+        if (p.moveAt >= 0 && t - p.moveAt > 1) p.moveAt = -1;
+        if (t > p.poseUntil && p.interactAt < 0 && p.moveAt < 0) {
+          const target = p.kind === 'cat' && Math.random() < 0.3 ? this.freeSpot(p.kind, p.spot) : -1;
+          if (target >= 0 && target !== p.spot) { p.moveAt = t; p.moveTo = target; }
+          p.pose = this.randomPose(p.pose);
+          const ps = POSES[/** @type {keyof typeof POSES} */ (p.pose)];
+          p.poseUntil = t + ps.min + Math.random() * (ps.max - ps.min);
+        }
+        continue;
+      }
       if (t > p.nextChange) {
         p.walking = !p.walking;
         if (p.walking && Math.random() < 0.5) p.dir *= -1;
@@ -649,21 +714,117 @@ export class Scene {
     ctx.restore();
   }
 
+  /**
+   * 找一個沒有其他寵物的位置
+   * @param {'cat'|'dog'} kind @param {number} exclude
+   */
+  freeSpot(kind, exclude) {
+    const used = new Set([...this.pets.values()].flatMap((p) => [p.spot, p.moveTo]));
+    // 只用完整出現在畫面裡的位置（不同螢幕比例裁切範圍不同）
+    const visible = (/** @type {ScreenSpot} */ s) => s.x - s.size * 0.5 >= 0 && s.x + s.size * 0.5 <= this.w && s.y <= this.h;
+    const free = this.spots.map((s, i) => i)
+      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && visible(this.spots[i]));
+    return free.length ? free[Math.floor(Math.random() * free.length)] : -1;
+  }
+
+  /** @param {string} [avoid] */
+  randomPose(avoid) {
+    const list = /** @type {(keyof typeof POSES)[]} */ (Object.keys(POSES)).filter((k) => k !== avoid);
+    const total = list.reduce((n, k) => n + POSES[k].weight, 0);
+    let r = Math.random() * total;
+    for (const k of list) { r -= POSES[k].weight; if (r < 0) return k; }
+    return list[0];
+  }
+
+  /** 寵物在畫面上的位置與大小 @param {PetEnt} p */
+  petPlace(p) {
+    if (p.spot >= 0 && this.spots[p.spot]) {
+      const s = this.spots[p.spot];
+      return { x: s.x, y: s.y, size: s.size, face: s.face };
+    }
+    const lp = getLandPet(p.type);
+    return { x: p.x, y: this.petY, size: lp.size * this.petUnit * 1.4, face: p.dir };
+  }
+
   /** @param {PetEnt} p */
   drawPet(p) {
     const { ctx } = this;
+    const sprites = this.assets.pets[p.type];
+    if (sprites && p.spot >= 0) {
+      this.drawPetSprite(p, sprites);
+      return;
+    }
     const lp = getLandPet(p.type);
     const S = lp.size * this.petUnit;
     const hop = Math.sin(p.hop * Math.PI) * S * 0.25;
     ctx.save();
     ctx.translate(p.x, this.petY - hop);
     ctx.scale(p.dir, 1);
-    const sprite = this.assets.landPets[p.type];
-    if (sprite) {
-      ctx.translate(0, -S * 0.5);
-      drawSprite(ctx, sprite, S, p.walking ? this.time : 0);
+    if (sprites) {
+      const e = sprites.states.idle ?? Object.values(sprites.states)[0];
+      const S2 = S * 1.4;
+      ctx.scale(sprites.facing, 1);
+      ctx.translate(0, -S2 * (sprites.anchorY - 0.5));
+      drawSprite(ctx, e, S2, this.time + p.phase);
     } else {
       drawLandPetPlaceholder(ctx, lp, S, this.time, p.walking);
+    }
+    ctx.restore();
+  }
+
+  /**
+   * 有美術、有固定位置的寵物
+   * @param {PetEnt} p @param {import('./assets.js').PetSprites} sp
+   */
+  drawPetSprite(p, sp) {
+    const { ctx } = this;
+    const t = this.time;
+    const { x, y, size: S, face } = this.petPlace(p);
+    const flip = face * sp.facing;
+    let alpha = 1;
+    if (p.moveAt >= 0) alpha = Math.abs(t - p.moveAt - 0.5) * 2; // 換位置：淡出再淡入
+    const interacting = p.interactAt >= 0 && sp.interact;
+    const sheet = interacting ? /** @type {import('./assets.js').SpriteEntry} */ (sp.interact) : (sp.states[p.pose] ?? Object.values(sp.states)[0]);
+    const time = interacting ? Math.min(t - p.interactAt, INTERACT_SEC - 0.01) : t + p.phase;
+
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+    ctx.translate(x, y);
+    // 影子
+    ctx.beginPath();
+    ctx.ellipse(0, -S * 0.01, S * 0.3, S * 0.04, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(60,30,10,.18)';
+    ctx.fill();
+    ctx.save();
+    ctx.scale(flip, 1);
+    ctx.translate(0, -S * (sp.anchorY - 0.5));
+    drawSprite(ctx, sheet, S, time);
+    ctx.restore();
+
+    // 睡覺時冒出 z
+    if (p.pose === 'sleep' && !interacting) {
+      const k = (t * 0.6 + p.phase) % 1;
+      ctx.globalAlpha *= Math.sin(k * Math.PI);
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = 'rgba(80,50,30,.6)';
+      ctx.lineWidth = 3;
+      ctx.font = `700 ${Math.round(S * 0.12)}px sans-serif`;
+      const zx = flip * S * (0.12 + k * 0.08), zy = -S * (0.38 + k * 0.18);
+      ctx.strokeText('z', zx, zy);
+      ctx.fillText('z', zx, zy);
+    }
+    // 互動愛心對話框（開始 0.2 秒後出現）
+    if (interacting && this.assets.heartBubble && t - p.interactAt > 0.2) {
+      const img = this.assets.heartBubble;
+      const bw = S * (img.naturalWidth / 384);
+      const bh = S * (img.naturalHeight / 384);
+      const pop = Math.min(1, (t - p.interactAt - 0.2) * 6);
+      const bx = flip > 0 ? -S / 2 + S * (250 / 384) : S / 2 - S * (250 / 384) - bw;
+      const by = -S * sp.anchorY + S * (28 / 384);
+      ctx.globalAlpha = 1;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, bx + bw * (1 - pop) / 2, by + bh * (1 - pop), bw * pop, bh * pop);
+      ctx.imageSmoothingEnabled = true;
     }
     ctx.restore();
   }
@@ -725,21 +886,28 @@ export class Scene {
   petReact(type, rewarded) {
     const p = this.pets.get(type);
     if (!p) return null;
-    p.hop = 1;
-    p.walking = false;
-    p.nextChange = this.time + 2;
-    const S = getLandPet(type).size * this.petUnit;
-    const n = rewarded ? 5 : 2;
+    const { x, y, size } = this.petPlace(p);
+    const hasSprite = !!this.assets.pets[type] && p.spot >= 0;
+    if (hasSprite) {
+      p.interactAt = this.time;
+      // 被摸醒了：之後改成坐著
+      if (p.pose === 'sleep') { p.pose = 'sit'; p.poseUntil = this.time + 8 + Math.random() * 8; }
+    } else {
+      p.hop = 1;
+      p.walking = false;
+      p.nextChange = this.time + 2;
+    }
+    const n = rewarded ? (hasSprite ? 3 : 5) : (hasSprite ? 0 : 2);
     for (let i = 0; i < n; i++) {
       this.particles.push({
-        x: p.x + (Math.random() - 0.5) * S * 0.5,
-        y: this.petY - S * 0.6,
+        x: x + (Math.random() - 0.5) * size * 0.4,
+        y: y - size * 0.45,
         vx: (Math.random() - 0.5) * 30,
         vy: -30 - Math.random() * 20,
         t: 0, kind: 'heart', color: '#ff7aa8',
       });
     }
-    return { x: p.x, y: this.petY - S * 0.9 };
+    return { x, y: y - size * (hasSprite ? 0.72 : 0.65) };
   }
 
   /**
@@ -748,9 +916,9 @@ export class Scene {
    */
   hitTest(x, y) {
     for (const p of this.pets.values()) {
-      const S = getLandPet(p.type).size * this.petUnit;
-      const r = Math.max(S * 0.55, 26);
-      if (Math.hypot(x - p.x, y - (this.petY - S * 0.25)) < r) return { kind: 'pet', type: p.type };
+      const pl = this.petPlace(p);
+      const r = Math.max(pl.size * 0.3, 26);
+      if (Math.hypot(x - pl.x, y - (pl.y - pl.size * 0.22)) < r) return { kind: 'pet', type: p.type };
     }
     /** @type {FishEnt|null} */
     let best = null;

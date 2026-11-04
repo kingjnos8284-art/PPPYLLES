@@ -74,10 +74,12 @@ export function petThumb(petId, w, h) {
   const lp = getLandPet(petId);
   const { c, ctx } = makeCanvas(w, h);
   const S = Math.min(w * 0.75, h * 1.3);
-  const sprite = bank?.landPets[petId];
-  if (sprite) {
-    ctx.translate(w / 2, h / 2);
-    drawSprite(ctx, sprite, S, 0);
+  const thumb = bank?.petThumbs[petId];
+  if (thumb) {
+    const s = Math.min(w / thumb.naturalWidth, h / thumb.naturalHeight);
+    const dw = thumb.naturalWidth * s, dh = thumb.naturalHeight * s;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(thumb, (w - dw) / 2, (h - dh) / 2, dw, dh);
   } else {
     ctx.translate(w / 2, h * 0.82);
     drawLandPetPlaceholder(ctx, lp, S, 0, false);

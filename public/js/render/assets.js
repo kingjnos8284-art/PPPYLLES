@@ -35,6 +35,31 @@
  * @property {number} floorY        陸地寵物腳底所在高度
  * @property {[number, number]} floorX  陸地寵物左右可走範圍
  * @property {number} focusX        畫面太窄（手機直拿）時，以這個水平位置為中心裁切
+ * @property {PetLayout} [pets]      陸地寵物的固定位置（貓跳台、狗窩等）
+ */
+
+/**
+ * @typedef {Object} PetSpot
+ * @property {'cat'|'dog'} kind   這個位置給貓或狗
+ * @property {number} x           腳底位置（佔圖片寬／高的比例）
+ * @property {number} y
+ * @property {number} face        在這個位置面向：1 = 右，-1 = 左
+ */
+
+/**
+ * @typedef {Object} PetLayout
+ * @property {number} catSize     貓的動畫格寬度（佔圖片寬度的比例）
+ * @property {number} dogSize
+ * @property {PetSpot[]} spots
+ */
+
+/**
+ * 陸地寵物的一組動畫。所有圖都以「腳底」對齊：anchorY 是腳底在畫格中的高度比例。
+ * @typedef {Object} PetSprites
+ * @property {Record<string, SpriteEntry>} states  sit / lie / idle / sleep 等循環動作
+ * @property {SpriteEntry|null} interact           點擊時播放一次的動作
+ * @property {number} facing                       圖中角色面向：1 = 右，-1 = 左
+ * @property {number} anchorY
  */
 
 /**
@@ -46,7 +71,10 @@
  * @property {Record<string, SpriteEntry>} fish       已載入的水中寵物動畫（用到才載入）
  * @property {Record<string, HTMLImageElement>} thumbs  水中寵物小圖
  * @property {(id: string) => void} requestFish     要求載入某個種類的動畫
- * @property {Record<string, SpriteEntry>} landPets
+ * @property {Record<string, PetSprites>} pets        已載入的陸地寵物動畫（用到才載入）
+ * @property {Record<string, HTMLImageElement>} petThumbs  陸地寵物小圖
+ * @property {(id: string) => void} requestPet      要求載入某隻陸地寵物的動畫
+ * @property {HTMLImageElement|null} heartBubble    互動時的愛心對話框
  * @property {Record<string, SpriteEntry>} decor
  */
 
@@ -104,12 +132,22 @@ export async function loadAssets() {
   const fishDefs = manifest.fish ?? {};
   /** @type {Record<string, HTMLImageElement>} */
   const thumbs = {};
-  const [background, backgroundPortrait, sand, landPets, decor] = await Promise.all([
+  const petDefs = manifest.landPets ?? {};
+  /** @type {Record<string, HTMLImageElement>} */
+  const petThumbs = {};
+  /** @type {HTMLImageElement|null} */
+  let heartBubble = null;
+  const [background, backgroundPortrait, sand, decor] = await Promise.all([
     loadEntry(manifest.background),
     loadEntry(manifest.backgroundPortrait),
     loadEntry(manifest.sand),
-    loadGroup(manifest.landPets),
     loadGroup(manifest.decor),
+    manifest.ui?.heartBubble ? loadImage('/assets/' + manifest.ui.heartBubble).then((i) => { heartBubble = i; }) : null,
+    ...Object.entries(petDefs).map(async ([k, v]) => {
+      if (!v || typeof v.thumb !== 'string') return;
+      const img = await loadImage('/assets/' + v.thumb);
+      if (img) petThumbs[k] = img;
+    }),
     ...Object.entries(fishDefs).map(async ([k, v]) => {
       if (!v || typeof v.thumb !== 'string') return;
       const img = await loadImage('/assets/' + v.thumb);
@@ -129,7 +167,30 @@ export async function loadAssets() {
     pending.add(id);
     loadEntry(fishDefs[id]).then((e) => { if (e) fish[id] = e; });
   };
-  return { background, backgroundPortrait, sand, fish, thumbs, requestFish, landPets, decor, effects };
+  /** @type {Record<string, PetSprites>} */
+  const pets = {};
+  const pendingPets = new Set();
+  /** @param {string} id */
+  const requestPet = (id) => {
+    const d = petDefs[id];
+    if (pets[id] || pendingPets.has(id) || !d || !d.states) return;
+    pendingPets.add(id);
+    const base = { cols: d.cols ?? 6, rows: d.rows ?? 4, frames: d.frames ?? 24, fps: d.fps ?? 10 };
+    Promise.all([
+      ...Object.entries(d.states).map(async ([st, src]) => /** @type {[string, SpriteEntry|null]} */ ([st, await loadEntry({ ...base, src })])),
+    ]).then(async (list) => {
+      /** @type {Record<string, SpriteEntry>} */
+      const states = {};
+      for (const [st, e] of list) if (e) states[st] = e;
+      if (!Object.keys(states).length) return;
+      const interact = d.interact ? await loadEntry({ ...base, ...d.interact }) : null;
+      pets[id] = { states, interact, facing: d.facing === -1 ? -1 : 1, anchorY: d.anchorY ?? 0.5 };
+    });
+  };
+  return {
+    background, backgroundPortrait, sand, fish, thumbs, requestFish,
+    pets, petThumbs, requestPet, heartBubble, decor, effects,
+  };
 }
 
 /**

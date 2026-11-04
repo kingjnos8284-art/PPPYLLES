@@ -1,16 +1,18 @@
 // @ts-check
 /**
- * 陸地寵物：永遠不會死亡，可以點擊互動。
+ * 陸地寵物：住在房間裡（貓在貓跳台、狗在狗窩旁），永遠不會死亡，可以點擊互動。
  *
+ * kind         'cat' 貓 / 'dog' 狗：決定牠會待在背景的哪一種位置
  * price        購買價格（0 = 初始贈送）
- * bonus        擁有時全體魚隻產出加成（0.05 = +5%）
+ * bonus        擁有時全體水中夥伴產出加成（0.05 = +5%）
  * tapReward    點擊互動時，獎勵「目前每秒產出 × 秒數」
- * shape        占位圖形
+ * size / speed / shape / color   沒有美術或背景沒有指定位置時使用的占位設定
  */
 
 /**
  * @typedef {Object} LandPetType
  * @property {string} id
+ * @property {'cat'|'dog'} kind
  * @property {string} name
  * @property {string} desc
  * @property {number} price
@@ -25,18 +27,21 @@
 /** @type {LandPetType[]} */
 export const LAND_PETS = [
   {
-    id: 'crab', name: '寄居蟹', desc: '在沙地上慢慢散步的小傢伙，摸摸牠會害羞地縮進殼裡。',
-    price: 0, bonus: 0.02, tapReward: 20, size: 34, speed: 18, shape: 'crab', color: '#ff7a5c',
+    id: 'cat_tuxedo', kind: 'cat', name: '賓士貓',
+    desc: '金色眼睛的賓士貓，最喜歡窩在貓跳台上看水母漂來漂去。',
+    price: 0, bonus: 0.03, tapReward: 20, size: 70, speed: 12, shape: 'capybara', color: '#2b2b33',
   },
   {
-    id: 'turtle', name: '陸龜', desc: '慢條斯理的老朋友，陪伴牠會讓整個水族箱更有活力。',
-    price: 1500, bonus: 0.05, tapReward: 30, size: 52, speed: 9, shape: 'turtle', color: '#6fbf73',
-  },
-  {
-    id: 'capybara', name: '水豚', desc: '世界上最放鬆的動物，只要牠在，大家都很安心。',
-    price: 12000, bonus: 0.1, tapReward: 45, size: 70, speed: 12, shape: 'capybara', color: '#b58457',
+    id: 'dog_dachshund', kind: 'dog', name: '長毛臘腸',
+    desc: '黑卡其色的長毛臘腸狗，總是守在狗窩前，摸摸頭就會開心搖尾巴。',
+    price: 1500, bonus: 0.06, tapReward: 30, size: 80, speed: 10, shape: 'capybara', color: '#3a2a1e',
   },
 ];
+
+/** @param {string} id */
+export function hasLandPet(id) {
+  return LAND_PETS.some((x) => x.id === id);
+}
 
 /** @param {string} id */
 export function getLandPet(id) {

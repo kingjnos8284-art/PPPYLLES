@@ -7,7 +7,7 @@ export const BALANCE = {
   startCoins: 50,
   /** 新玩家起始魚種（固定灰色品質）與陸地寵物 */
   starterFish: 'star_blue',
-  starterPet: 'crab',
+  starterPet: 'cat_tuxedo',
 
   /** 水族箱最多可養幾隻魚 */
   tankCapacity: 12,

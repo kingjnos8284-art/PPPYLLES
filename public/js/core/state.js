@@ -1,13 +1,14 @@
 // @ts-check
 import { BALANCE } from '../config/balance.js';
 import { hasSpecies } from '../config/species.js';
+import { hasLandPet } from '../config/landpets.js';
 
 /**
  * 存檔資料結構。所有會被存起來的東西都在這裡，
  * 日後換成伺服器存檔時，整包 GameState 就是要上傳的內容。
  */
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /**
  * @typedef {Object} FishData
@@ -91,6 +92,23 @@ export function migrate(raw) {
     }
     raw.version = 2;
   }
+  // v2 → v3：陸地寵物改為貓狗。寄居蟹換成賓士貓，陸龜／水豚換成長毛臘腸（不另扣款）
+  if (raw.version === 2) {
+    /** @type {Record<string, string>} */
+    const map = { crab: 'cat_tuxedo', turtle: 'dog_dachshund', capybara: 'dog_dachshund' };
+    for (const p of raw.landPets ?? []) if (map[p.type]) p.type = map[p.type];
+    raw.version = 3;
+  }
+  // 陸地寵物：去除不認得與重複的，並確保有初始寵物
+  /** @type {Set<string>} */
+  const seenPets = new Set();
+  raw.landPets = (raw.landPets ?? []).filter((/** @type {any} */ p) => {
+    if (!hasLandPet(p.type) || seenPets.has(p.type)) return false;
+    seenPets.add(p.type);
+    return true;
+  });
+  if (!seenPets.has(BALANCE.starterPet)) raw.landPets.unshift({ type: BALANCE.starterPet, lastTapAt: 0, affection: 0 });
+
   // 保險：任何不認得的種類都清掉，避免畫面出錯
   raw.fish = (raw.fish ?? []).filter((/** @type {any} */ f) => hasSpecies(f.species));
   for (const k of Object.keys(raw.codex ?? {})) if (!hasSpecies(k)) delete raw.codex[k];

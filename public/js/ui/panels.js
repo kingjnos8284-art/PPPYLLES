@@ -51,7 +51,7 @@ export function openShop(tab) {
     const state = G.getState();
     const tabs = el('div', { class: 'tabs' }, [
       tabBtn('水母與魚', 'fish'),
-      tabBtn('陸地寵物', 'pets'),
+      tabBtn('貓狗', 'pets'),
       tabBtn('裝飾', 'decor'),
     ]);
     /** @type {Node} */
@@ -109,7 +109,7 @@ export function openShop(tab) {
                 const r = buyLandPet(G.getState(), p.id);
                 if (!r.ok) { toast(r.reason ?? ''); return; }
                 G.commit();
-                toast(`${p.name} 來到了水族箱！點牠可以互動`);
+                toast(`${p.name} 搬進了房間！點牠可以互動`);
                 replaceSheetContent(render());
               },
             }, [coinIcon(), fmt(p.price)]),

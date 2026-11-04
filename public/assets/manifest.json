@@ -20,7 +20,49 @@
         0.04,
         0.97
       ],
-      "focusX": 0.59
+      "focusX": 0.59,
+      "pets": {
+        "catSize": 0.085,
+        "dogSize": 0.1,
+        "spots": [
+          {
+            "kind": "cat",
+            "x": 0.144,
+            "y": 0.352,
+            "face": 1
+          },
+          {
+            "kind": "cat",
+            "x": 0.131,
+            "y": 0.514,
+            "face": 1
+          },
+          {
+            "kind": "cat",
+            "x": 0.171,
+            "y": 0.577,
+            "face": 1
+          },
+          {
+            "kind": "cat",
+            "x": 0.117,
+            "y": 0.658,
+            "face": 1
+          },
+          {
+            "kind": "dog",
+            "x": 0.833,
+            "y": 0.878,
+            "face": -1
+          },
+          {
+            "kind": "dog",
+            "x": 0.921,
+            "y": 0.878,
+            "face": -1
+          }
+        ]
+      }
     }
   },
   "backgroundPortrait": {
@@ -44,7 +86,43 @@
         0.25,
         0.97
       ],
-      "focusX": 0.5
+      "focusX": 0.45,
+      "pets": {
+        "catSize": 0.17,
+        "dogSize": 0.19,
+        "spots": [
+          {
+            "kind": "cat",
+            "x": 0.1,
+            "y": 0.703,
+            "face": 1
+          },
+          {
+            "kind": "cat",
+            "x": 0.08,
+            "y": 0.789,
+            "face": 1
+          },
+          {
+            "kind": "cat",
+            "x": 0.178,
+            "y": 0.814,
+            "face": 1
+          },
+          {
+            "kind": "dog",
+            "x": 0.73,
+            "y": 0.797,
+            "face": -1
+          },
+          {
+            "kind": "dog",
+            "x": 0.87,
+            "y": 0.797,
+            "face": -1
+          }
+        ]
+      }
     }
   },
   "sand": null,
@@ -202,9 +280,49 @@
     }
   },
   "landPets": {
-    "crab": null,
-    "turtle": null,
-    "capybara": null
+    "cat_tuxedo": {
+      "facing": 1,
+      "anchorY": 0.8854,
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "states": {
+        "sit": "pets/cat_tuxedo-sit-v1.webp",
+        "lie": "pets/cat_tuxedo-lie-v1.webp",
+        "idle": "pets/cat_tuxedo-idle-v1.webp",
+        "sleep": "pets/cat_tuxedo-sleep-v1.webp"
+      },
+      "interact": {
+        "src": "pets/cat_tuxedo-interact-v1.webp",
+        "rows": 2,
+        "frames": 12
+      },
+      "thumb": "pets/cat_tuxedo-thumb-v1.webp"
+    },
+    "dog_dachshund": {
+      "facing": -1,
+      "anchorY": 0.8854,
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "states": {
+        "sit": "pets/dog_dachshund-sit-v1.webp",
+        "lie": "pets/dog_dachshund-lie-v1.webp",
+        "idle": "pets/dog_dachshund-idle-v1.webp",
+        "sleep": "pets/dog_dachshund-sleep-v1.webp"
+      },
+      "interact": {
+        "src": "pets/dog_dachshund-interact-v1.webp",
+        "rows": 2,
+        "frames": 12
+      },
+      "thumb": "pets/dog_dachshund-thumb-v1.webp"
+    }
   },
-  "decor": {}
+  "decor": {},
+  "ui": {
+    "heartBubble": "pets/heart-bubble-v1.png"
+  }
 }
