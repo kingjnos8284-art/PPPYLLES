@@ -7,7 +7,7 @@
  *   tools         設定頁出現「測試工具」（快轉時間、清空水族箱等）
  */
 export const TEST_MODE = {
-  enabled: true,
+  enabled: false,
   freeShop: false,
   codexAll: false,
   tankCapacity: 30,
