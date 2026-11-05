@@ -65,7 +65,7 @@ export function openShop(tab) {
         full ? el('div', { class: 'notice' }, ['水族箱已經滿了。']) : null,
         ...[...SPECIES].sort((x, y) => x.price - y.price).map((sp) => {
           // 太貴的魚種先以剪影顯示，累積到一定資源後揭曉，保留一點期待感
-          const unlocked = codexAll() || !!state.codex[sp.id] || sp.price <= Math.max(150, state.totalEarned);
+          const unlocked = codexAll() || !!state.codex[sp.id] || sp.price <= Math.max(1500, state.totalEarned);
           const price = priceOf(sp.price);
           const canBuy = !full && state.coins >= price;
           return el('div', { class: 'card nine-card' }, [

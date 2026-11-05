@@ -35,12 +35,12 @@ export const LAND_PETS = [
   {
     id: 'cat_tabby', kind: 'cat', name: 'LUNA', breed: '虎斑貓',
     desc: '金色眼睛的虎斑貓，好奇心旺盛，常常盯著水母一看就是好久。',
-    price: 800, bonus: 0.04, tapReward: 25, size: 70, speed: 12, shape: 'capybara', color: '#7a5c44',
+    price: 100000, bonus: 0.04, tapReward: 25, size: 70, speed: 12, shape: 'capybara', color: '#7a5c44',
   },
   {
     id: 'dog_dachshund', kind: 'dog', name: 'NANA', breed: '長毛臘腸',
     desc: '黑卡其色的長毛臘腸狗，總是守在狗窩前，摸摸頭就會開心搖尾巴。',
-    price: 1500, bonus: 0.06, tapReward: 30, size: 80, speed: 10, shape: 'capybara', color: '#3a2a1e',
+    price: 500000, bonus: 0.06, tapReward: 30, size: 80, speed: 10, shape: 'capybara', color: '#3a2a1e',
   },
 ];
 

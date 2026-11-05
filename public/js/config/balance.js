@@ -19,7 +19,7 @@ export const TEST_MODE = {
  */
 export const BALANCE = {
   /** 新玩家起始資源 */
-  startCoins: 50,
+  startCoins: 1500,
   /** 新玩家起始魚種（固定灰色品質）與陸地寵物 */
   starterFish: 'star_blue',
   starterPet: 'cat_tuxedo',
@@ -46,8 +46,8 @@ export const BALANCE = {
   /** 水母每次游動的距離（佔水族箱寬度的比例，0~1）。越大游得越遠 */
   swimRange: 0.7,
 
-  /** 水族箱最多可養幾隻魚 */
-  tankCapacity: 12,
+  /** 水族箱最多可養幾隻水母 */
+  tankCapacity: 20,
 
   /** 離線收益上限（小時） */
   offlineCapHours: 6,
