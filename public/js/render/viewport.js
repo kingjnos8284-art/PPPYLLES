@@ -35,5 +35,8 @@ export function applyViewport() {
   const { h } = viewportSize();
   const root = document.documentElement.style;
   root.setProperty('--app-h', `${h}px`);
-  root.setProperty('--app-gap', `${Math.max(0, h - window.innerHeight)}px`);
+  const gap = Math.max(0, h - window.innerHeight);
+  root.setProperty('--app-gap', `${gap}px`);
+  // 這種情況下 iOS 也不會回報底部手勢列的安全距離，自行補上（直向 34、橫向 21 點）
+  root.setProperty('--app-safe-bottom', gap > 0 ? `${window.innerWidth > h ? 21 : 34}px` : '0px');
 }
