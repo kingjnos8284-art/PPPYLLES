@@ -352,7 +352,8 @@ export class Scene {
         e = {
           uid: d.uid, species: d.species, quality: d.quality,
           x: this.swim.left + Math.random() * (this.swim.right - this.swim.left),
-          y: isNew ? this.swim.top - 30 : this.swim.top + Math.random() * (this.swim.bottom - this.swim.top),
+          // 新來的夥伴從上半部隨機位置淡入，避免一次放很多隻時全部擠在水面
+          y: this.swim.top + Math.random() * (this.swim.bottom - this.swim.top) * (isNew ? 0.5 : 1),
           vx: 0, vy: 0, tx: 0, ty: 0,
           face: Math.random() > 0.5 ? 1 : -1,
           phase: Math.random() * 10,
@@ -365,7 +366,6 @@ export class Scene {
           L: 0,
         };
         this.pickTarget(e);
-        if (isNew) e.ty = this.swim.top + (this.swim.bottom - this.swim.top) * 0.4;
         this.fish.set(d.uid, e);
       }
       e.L = getSpecies(d.species).size * this.unit * growthScale(d);

@@ -91,6 +91,12 @@ async function boot() {
       state = newGame(Date.now());
       commit();
     },
+    fastForward: (sec) => {
+      // 不受離線上限限制，直接推進遊戲時間（成長、老化、收益都會發生）
+      const r = advance(state, sec, Date.now());
+      announceDeaths(r.died);
+      commit();
+    },
   });
 
   // 測試用：網址加上 ?debug 時可從主控台存取

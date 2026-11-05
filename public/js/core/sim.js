@@ -1,5 +1,5 @@
 // @ts-check
-import { BALANCE } from '../config/balance.js';
+import { BALANCE, tankCapacity, priceOf } from '../config/balance.js';
 import { getSpecies, SPECIES } from '../config/species.js';
 import { getQuality, QUALITIES } from '../config/quality.js';
 import { getLandPet } from '../config/landpets.js';
@@ -158,9 +158,10 @@ export function addFish(state, speciesId, quality) {
  */
 export function buyFish(state, speciesId) {
   const sp = getSpecies(speciesId);
-  if (state.fish.length >= BALANCE.tankCapacity) return { ok: false, reason: '水族箱已經滿了' };
-  if (state.coins < sp.price) return { ok: false, reason: '資源不足' };
-  state.coins -= sp.price;
+  const price = priceOf(sp.price);
+  if (state.fish.length >= tankCapacity()) return { ok: false, reason: '水族箱已經滿了' };
+  if (state.coins < price) return { ok: false, reason: '資源不足' };
+  state.coins -= price;
   return { ok: true, fish: addFish(state, speciesId, rollQuality()) };
 }
 
@@ -173,8 +174,9 @@ export function buyFish(state, speciesId) {
 export function buyLandPet(state, petId) {
   const p = getLandPet(petId);
   if (state.landPets.some((x) => x.type === petId)) return { ok: false, reason: '已經擁有' };
-  if (state.coins < p.price) return { ok: false, reason: '資源不足' };
-  state.coins -= p.price;
+  const price = priceOf(p.price);
+  if (state.coins < price) return { ok: false, reason: '資源不足' };
+  state.coins -= price;
   state.landPets.push({ type: petId, lastTapAt: 0, affection: 0 });
   return { ok: true };
 }

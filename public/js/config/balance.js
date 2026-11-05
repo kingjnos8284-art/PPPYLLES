@@ -1,5 +1,20 @@
 // @ts-check
 /**
+ * 測試模式：正式上線前改成 false。
+ *   freeShop      所有購買不花資源
+ *   codexAll      圖鑑全部顯示（不會寫進存檔，關閉後恢復正常）
+ *   tankCapacity  測試時的水族箱容量（方便一次放入全部種類）
+ *   tools         設定頁出現「測試工具」（快轉時間、清空水族箱等）
+ */
+export const TEST_MODE = {
+  enabled: true,
+  freeShop: true,
+  codexAll: true,
+  tankCapacity: 30,
+  tools: true,
+};
+
+/**
  * 遊戲整體數值。調整節奏時優先改這裡。
  */
 export const BALANCE = {
@@ -47,3 +62,13 @@ export const BALANCE = {
 };
 
 /** @typedef {keyof typeof BALANCE.stages} StageId */
+
+/** 目前的水族箱容量 */
+export function tankCapacity() {
+  return TEST_MODE.enabled ? TEST_MODE.tankCapacity : BALANCE.tankCapacity;
+}
+
+/** 實際購買價格（測試模式免費） @param {number} price */
+export function priceOf(price) {
+  return TEST_MODE.enabled && TEST_MODE.freeShop ? 0 : price;
+}

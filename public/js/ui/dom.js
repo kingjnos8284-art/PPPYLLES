@@ -71,7 +71,12 @@ export function fmtDuration(sec) {
 
 /** @param {import('../config/quality.js').Quality} q */
 export function qualityBadge(q) {
-  return el('span', { class: 'q-badge', style: { '--qc': q.color } }, [q.name]);
+  return el('span', { class: 'q-badge', style: { '--qc': q.color } }, [qualityGem(q.id), q.name]);
+}
+
+/** 品質寶石圖示 @param {string} id @param {string} [cls] */
+export function qualityGem(id, cls = 'q-gem') {
+  return el('img', { class: cls, src: `/assets/ui/quality-${id}-v1.png`, alt: '', draggable: 'false' });
 }
 
 export function coinIcon() {

@@ -132,3 +132,19 @@
 ```
 
 或者直接把圖交給 Claude，由 Claude 處理去背、裁切、命名與登記。
+
+## 6. 介面素材 — 已完成
+
+素材包：`aquarium_ui_v1`，放在 `public/assets/ui/`。九宮格素材已裁掉透明留白，CSS 使用的切片值：
+
+| 素材 | 切片（px） | CSS 類別 |
+|---|---|---|
+| panel | 16 | `.nine-panel` |
+| card | 16 | `.nine-card` |
+| button_primary / secondary / pressed | 16 | `.nine-btn` / `.nine-btn2`（按下自動換 pressed） |
+| dock | 16 | `.nine-dock` |
+| pill | 左右 32、上下 24 | `.nine-pill` |
+| tab_active / inactive | 14 | `.nine-tab-on` / `.nine-tab` |
+
+圖示（128 × 128）：貨幣珍珠、商店、圖鑑、裝飾、設定、水族箱、關閉、愛心。品質寶石（52 × 52）。
+標誌 `logo-v1.png` 不含文字，遊戲名稱用程式疊在中央。
