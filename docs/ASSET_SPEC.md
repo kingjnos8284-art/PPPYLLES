@@ -22,6 +22,8 @@
 | `forest` | 森林精靈屋 | 免費 | `bg/forest-landscape-v1.webp`、`bg/forest-portrait-v1.webp` |
 | `stellar` | 星空水晶館 | 500,000 | `bg/stellar-landscape-v1.webp`、`bg/stellar-portrait-v1.webp` |
 
+畫面比例和背景圖不同時（例如 iPad 的 4:3），程式會從 `layout` 算出「一定要完整看得到的範圍」（水族箱水面以下、所有寵物位置與狗床），縮放到放得進畫面，多出來的空間下方用地板延伸、左右用邊緣鏡像補滿，所以不需要另外畫 iPad 版背景。
+
 主題設定在 `public/assets/manifest.json` 的 `themes`，每個主題有價格（`price`）、橫／直背景、`layout`（水族箱水域、游動範圍、寵物位置）與縮圖。
 寵物位置可設定固定順序（`rank`：1 = 同種類中最先擁有的那隻，2 = 第二隻…），或標成備用位置（`fallback`）：當一般位置超出畫面或被底部選單擋住時才使用。
 新增主題：沿用相同構圖（左側貓跳台、中央水族箱、右下兩張狗床），交給 Claude 量測位置即可。

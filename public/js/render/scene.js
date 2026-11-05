@@ -162,18 +162,15 @@ export class Scene {
       // 背景圖有版面設定：魚游在圖中的水族箱裡，陸地寵物走在地板上
       const iw = this.bgEntry.img.naturalWidth;
       const ih = this.bgEntry.img.naturalHeight;
-      let s = Math.max(w / iw, h / ih);
-      let dx, dy;
-      if (layout.fitWidth && iw * (h / ih) > w * 1.01) {
-        // 完整顯示整張寬度：貼齊上緣，下方不足的部分用地板往下延伸
-        s = w / iw;
-        dx = 0;
-        dy = 0;
-      } else {
-        const dw0 = iw * s;
-        dx = clamp(w / 2 - layout.focusX * dw0, w - dw0, 0);
-        dy = (h - ih * s) / 2;
-      }
+      // 一定要完整看得到的範圍（水族箱、貓跳台、狗床）。畫面比例和背景圖不同時（例如 iPad 的 4:3），
+      // 縮放到這個範圍放得進畫面；多出來的空間：下方用地板延伸、左右用邊緣鏡像補滿，保持滿版
+      const safe = safeBox(layout);
+      const sCover = Math.max(w / iw, h / ih);
+      const sFit = Math.min(w / ((safe.x1 - safe.x0) * iw), h / ((safe.y1 - safe.y0) * ih));
+      const s = Math.min(sCover, sFit);
+      const dw0 = iw * s, dh0 = ih * s;
+      let dx = dw0 >= w ? clamp(w / 2 - ((safe.x0 + safe.x1) / 2) * dw0, w - dw0, 0) : (w - dw0) / 2;
+      let dy = dh0 >= h ? clamp(h / 2 - ((safe.y0 + safe.y1) / 2) * dh0, h - dh0, 0) : 0;
       // 狗床被底部選單擋住時，把整個場景往上移，讓狗狗一定待在狗床上看得到
       if (layout.pets) {
         const dock = this.dockRect;
@@ -263,6 +260,7 @@ export class Scene {
       const img = bgEntry.img;
       const dh = img.naturalHeight * s;
       g.drawImage(img, dx, dy, img.naturalWidth * s, dh);
+      if (dx > 0.5) this.extendSides(g, img, dx, dy, s);
       if (dy + dh < h - 0.5) this.extendFloor(g, img, dx, dy + dh, s, h);
     } else if (bgEntry) {
       // 沒有版面設定的背景：底部對齊，確保沙地永遠在畫面下方
@@ -334,6 +332,38 @@ export class Scene {
         g.fillStyle = `rgba(${90 + rnd() * 60},${80 + rnd() * 40},${70 + rnd() * 30},.8)`;
         g.fill();
       }
+    }
+  }
+
+  /**
+   * 背景圖比畫面窄時，左右兩側用圖片邊緣鏡像延伸，並稍微調暗，看起來像房間延伸到畫面外
+   * @param {CanvasRenderingContext2D} g @param {HTMLImageElement} img
+   * @param {number} dx @param {number} dy @param {number} s
+   */
+  extendSides(g, img, dx, dy, s) {
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const gap = Math.ceil(dx) + 1;
+    const src = Math.min(iw, gap / s);
+    const dh = ih * s;
+    const right = dx + iw * s;
+    g.save();
+    // 左側：以圖片左緣為鏡子
+    g.translate(dx, 0); g.scale(-1, 1);
+    g.drawImage(img, 0, 0, src, ih, 0, dy, src * s, dh);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.restore();
+    g.save();
+    // 右側：以圖片右緣為鏡子
+    g.translate(right, 0); g.scale(-1, 1);
+    g.drawImage(img, iw - src, 0, src, ih, -src * s, dy, src * s, dh);
+    g.restore();
+    // 越往外越暗
+    for (const [x0, x1] of [[0, dx], [this.w, right]]) {
+      const sh = g.createLinearGradient(x1, 0, x0, 0);
+      sh.addColorStop(0, 'rgba(10,8,6,0.15)');
+      sh.addColorStop(1, 'rgba(10,8,6,0.45)');
+      g.fillStyle = sh;
+      g.fillRect(Math.min(x0, x1), 0, Math.abs(x1 - x0) + 1, this.h);
     }
   }
 
@@ -1120,6 +1150,26 @@ function selectArrow() {
   }));
   arrowCache = c;
   return c;
+}
+
+/**
+ * 背景中一定要完整顯示的範圍（圖片寬高的比例）：水族箱水面以下、所有寵物位置與狗床
+ * @param {any} layout
+ */
+function safeBox(layout) {
+  let x0 = layout.tank.x0, x1 = layout.tank.x1;
+  let y1 = layout.swim.y1;
+  const y0 = Math.max(0, layout.swim.y0 - 0.02);
+  for (const sp of layout.pets?.spots ?? []) {
+    if (sp.fallback) continue;
+    const half = (sp.kind === 'cat' ? layout.pets.catSize : layout.pets.dogSize) * 0.5;
+    x0 = Math.min(x0, sp.x - half);
+    x1 = Math.max(x1, sp.x + half);
+    y1 = Math.max(y1, sp.y + 0.03);
+  }
+  // 「完整顯示整張寬度」的版面：左右都不能裁
+  if (layout.fitWidth) { x0 = 0; x1 = 1; }
+  return { x0: Math.max(0, x0), x1: Math.min(1, x1), y0, y1: Math.min(1, y1) };
 }
 
 /** 泡泡冒出的位置（水族箱游動範圍的寬度比例，間距故意不完全平均） */
