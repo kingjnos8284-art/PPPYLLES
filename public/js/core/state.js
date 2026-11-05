@@ -8,13 +8,12 @@ import { hasLandPet } from '../config/landpets.js';
  * 日後換成伺服器存檔時，整包 GameState 就是要上傳的內容。
  */
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /**
  * @typedef {Object} FishData
  * @property {number} uid
  * @property {string} species
- * @property {import('../config/quality.js').QualityId} quality
  * @property {number} ageSec        已陪伴秒數
  * @property {string} [nickname]
  */
@@ -28,7 +27,7 @@ export const SAVE_VERSION = 4;
 
 /**
  * @typedef {Object} CodexEntry
- * @property {import('../config/quality.js').QualityId[]} qualities  曾經獲得的品質
+ * @property {number} [released]  累計放生數
  * @property {number} raised        累計飼養數
  */
 
@@ -43,7 +42,7 @@ export const SAVE_VERSION = 4;
  * @property {FishData[]} fish
  * @property {LandPetData[]} landPets
  * @property {Record<string, CodexEntry>} codex
- * @property {{ species: string, quality: string, at: number }[]} memorial  舊版的離世紀錄（已不再使用，保留欄位相容舊存檔）
+ * @property {any[]} memorial  舊版的離世紀錄（已不再使用，保留欄位相容舊存檔）
  * @property {{ owned: string[], placed: { id: string, x: number, y: number }[] }} decor  預留
  * @property {{ userId: string|null }} account  預留：日後帳號系統
  */
@@ -115,15 +114,16 @@ export function migrate(raw) {
   });
   if (!seenPets.has(BALANCE.starterPet)) raw.landPets.unshift({ type: BALANCE.starterPet, lastTapAt: 0, affection: 0 });
 
-  // 已移除成長與壽命：清掉舊存檔的壽命欄位
-  for (const f of raw.fish ?? []) delete f.lifeSec;
+  // 已移除成長、壽命與品質：清掉舊存檔的對應欄位（v4 → v5）
+  for (const f of raw.fish ?? []) { delete f.lifeSec; delete f.quality; }
+  for (const e of Object.values(raw.codex ?? {})) delete /** @type {any} */ (e).qualities;
+  if (raw.version === 4) raw.version = 5;
 
   // 保險：任何不認得的種類都清掉，避免畫面出錯
   raw.fish = (raw.fish ?? []).filter((/** @type {any} */ f) => hasSpecies(f.species));
   for (const k of Object.keys(raw.codex ?? {})) if (!hasSpecies(k)) delete raw.codex[k];
   for (const f of raw.fish) {
-    const e = (raw.codex[f.species] ??= { qualities: [], raised: 0 });
-    if (!e.qualities.includes(f.quality)) e.qualities.push(f.quality);
+    const e = (raw.codex[f.species] ??= { raised: 0 });
     e.raised = Math.max(e.raised, 1);
   }
   raw.memorial = raw.memorial.filter((/** @type {any} */ m) => hasSpecies(m.species));

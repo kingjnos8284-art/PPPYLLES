@@ -24,7 +24,7 @@ let scene;
 /** @param {number} now */
 function newGame(now) {
   const s = createNewState(now);
-  addFish(s, BALANCE.starterFish, 'gray');
+  addFish(s, BALANCE.starterFish);
   return s;
 }
 
@@ -79,6 +79,7 @@ async function boot() {
       state = newGame(Date.now());
       commit();
     },
+    onReleased: (uid) => { scene.releaseEffect(uid); scene.selectedUid = null; },
     fastForward: (sec) => {
       // 不受離線上限限制，直接推進遊戲時間（成長、老化、收益都會發生）
       advance(state, sec);

@@ -1,7 +1,6 @@
 // @ts-check
 import { getSpecies } from '../config/species.js';
 import { BALANCE } from '../config/balance.js';
-import { getQuality } from '../config/quality.js';
 import { getLandPet } from '../config/landpets.js';
 import { drawSprite, drawCover } from './assets.js';
 import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder.js';
@@ -29,7 +28,6 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {number} born
  * @property {number} dying  -1 = 活著；否則為開始離去的時間
  * @property {string} species
- * @property {string} quality
  * @property {number} L
  */
 
@@ -350,7 +348,7 @@ export class Scene {
       if (!e) {
         const isNew = d.ageSec < 3;
         e = {
-          uid: d.uid, species: d.species, quality: d.quality,
+          uid: d.uid, species: d.species,
           x: this.swim.left + Math.random() * (this.swim.right - this.swim.left),
           // 新來的夥伴從上半部隨機位置淡入，避免一次放很多隻時全部擠在水面
           y: this.swim.top + Math.random() * (this.swim.bottom - this.swim.top) * (isNew ? 0.5 : 1),
@@ -411,7 +409,8 @@ export class Scene {
     // 魚
     for (const f of this.fish.values()) {
       if (f.dying >= 0) {
-        f.vy = -12;
+        // 離開水族箱：慢慢往上游、淡出
+        f.vy = Math.max(f.vy - 40 * dt, -45);
         f.y += f.vy * dt;
         if (t - f.dying > 2.5) this.fish.delete(f.uid);
         continue;
@@ -650,7 +649,6 @@ export class Scene {
     const { ctx } = this;
     const t = this.time;
     const sp = getSpecies(f.species);
-    const q = getQuality(f.quality);
     const L = f.L;
 
     let alpha = Math.min(1, (t - f.born) / 0.8);
@@ -662,27 +660,8 @@ export class Scene {
     ctx.globalAlpha = alpha;
 
     const sprite = this.assets.fish[f.species];
-    // 品質光暈（紫、金、紅）；動畫圖四周有留白，光暈改以實際身體大小計算
+    // 動畫圖四周有留白，選取框以實際身體大小計算
     const AL = sprite ? L * 0.62 : L;
-    if (q.aura && f.dying < 0) {
-      const pulse = 0.28 + 0.1 * Math.sin(t * 2.5 + f.phase);
-      const rg = ctx.createRadialGradient(0, 0, AL * 0.1, 0, 0, AL * 0.95);
-      rg.addColorStop(0, hexA(q.color, pulse));
-      rg.addColorStop(1, hexA(q.color, 0));
-      ctx.fillStyle = rg;
-      ctx.beginPath();
-      ctx.arc(0, 0, AL * 0.95, 0, Math.PI * 2);
-      ctx.fill();
-      if (q.id === 'red' || q.id === 'gold') {
-        for (let i = 0; i < 3; i++) {
-          const a = t * 1.5 + i * 2.1 + f.phase;
-          ctx.beginPath();
-          ctx.arc(Math.cos(a) * AL * 0.6, Math.sin(a) * AL * 0.35, 1.8, 0, Math.PI * 2);
-          ctx.fillStyle = hexA(q.color, 0.9);
-          ctx.fill();
-        }
-      }
-    }
 
     // 選取框
     if (this.selectedUid === f.uid) {
@@ -702,7 +681,6 @@ export class Scene {
       ctx.scale(fx, 1);
       ctx.rotate(tilt);
     }
-    if (f.dying >= 0) ctx.rotate(Math.min(Math.PI, (t - f.dying) * 1.5));
 
     if (sprite) {
       const slow = Math.hypot(f.vx, f.vy) < sp.speed * this.unit * 0.3;
@@ -879,6 +857,21 @@ export class Scene {
   /** @param {number} x @param {number} y @param {string} text @param {string} [color] */
   floatText(x, y, text, color = '#ffd25e') {
     this.floats.push({ x, y, text, color, t: 0 });
+  }
+
+  /** 放生特效：冒出一串氣泡 @param {number} uid */
+  releaseEffect(uid) {
+    const f = this.fish.get(uid);
+    if (!f) return;
+    for (let i = 0; i < 8; i++) {
+      this.bubbles.push({
+        x: f.x + (Math.random() - 0.5) * f.L * 0.4,
+        y: f.y + (Math.random() - 0.5) * f.L * 0.3,
+        r: (1.5 + Math.random() * 3) * this.unit,
+        v: 40 + Math.random() * 40,
+        ph: Math.random() * 10,
+      });
+    }
   }
 
   /** @param {string} type @param {boolean} rewarded */

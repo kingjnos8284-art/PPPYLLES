@@ -23,12 +23,6 @@
   --gold: #edc577;
   --line: rgba(137, 100, 78, .22);
 
-  --q-gray: #9aa4ad;
-  --q-green: #4cb87a;
-  --q-purple: #9a6bdf;
-  --q-gold: #e0a92e;
-  --q-red: #e0505e;
-
   --dock-h: 64px;
   font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
 }
@@ -247,15 +241,6 @@ img { -webkit-user-drag: none; }
   padding: 10px 6px; color: var(--ink-soft); text-align: center; line-height: 1.7; font-size: 14px;
 }
 
-/* 品質：寶石＋顏色名稱 */
-.q-badge {
-  display: inline-flex; align-items: center; gap: 3px; font-size: 13px; font-weight: 800;
-  color: var(--qc, var(--q-gray));
-}
-.q-gem { width: 18px; height: 18px; image-rendering: pixelated; flex: none; }
-.q-dots { display: inline-flex; gap: 2px; }
-.q-dot { width: 14px; height: 14px; image-rendering: pixelated; opacity: .22; filter: grayscale(1); }
-.q-dot.on { opacity: 1; filter: none; }
 
 /* 圖鑑 */
 .codex-summary { color: var(--ink-soft); font-size: 13px; margin-bottom: 10px; font-weight: 600; }
@@ -285,7 +270,7 @@ img { -webkit-user-drag: none; }
 .reveal { text-align: center; padding: 4px 0 2px; }
 .reveal-hero {
   height: 190px; display: grid; place-items: center; border-radius: 12px; margin-bottom: 10px;
-  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--qc) 40%, #fffaed), #b8dee5 75%);
+  background: radial-gradient(circle at 50% 50%, #fffaed, #b8dee5 75%);
   box-shadow: inset 0 0 0 2px rgba(137, 100, 78, .25);
 }
 .reveal-title { font-size: 20px; font-weight: 800; margin: 6px 0; }
@@ -360,3 +345,8 @@ img { -webkit-user-drag: none; }
 @keyframes toast { 0% { opacity: 0; transform: translateY(-8px) } 10%, 85% { opacity: 1; transform: none } 100% { opacity: 0 } }
 
 @media (max-width: 420px) { .test-badge { padding: 2px 6px; font-size: 11px; } .hud-right { gap: 4px; } }
+
+/* 放生確認 */
+.release-confirm { margin-top: 10px; text-align: center; }
+.release-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.release-row .ghost-btn, .release-row .danger-btn { margin-top: 6px; }

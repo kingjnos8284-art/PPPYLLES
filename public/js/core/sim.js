@@ -1,7 +1,6 @@
 // @ts-check
 import { BALANCE, tankCapacity, priceOf } from '../config/balance.js';
 import { getSpecies, SPECIES } from '../config/species.js';
-import { getQuality, QUALITIES } from '../config/quality.js';
 import { getLandPet } from '../config/landpets.js';
 
 /**
@@ -23,9 +22,7 @@ export function petBonus(state) {
  * @param {number} bonus
  */
 export function fishIncome(f, bonus) {
-  const sp = getSpecies(f.species);
-  const q = getQuality(f.quality);
-  return sp.income * q.incomeMult * (1 + bonus);
+  return getSpecies(f.species).income * (1 + bonus);
 }
 
 /** 全體每秒產出 @param {GameState} state */
@@ -58,39 +55,21 @@ export function advance(state, dtSec) {
 }
 
 /**
- * 依權重抽品質
- * @param {() => number} [rand]
- * @returns {import('../config/quality.js').QualityId}
- */
-export function rollQuality(rand = Math.random) {
-  const total = QUALITIES.reduce((s, q) => s + q.weight, 0);
-  let r = rand() * total;
-  for (const q of QUALITIES) {
-    r -= q.weight;
-    if (r < 0) return q.id;
-  }
-  return QUALITIES[0].id;
-}
-
-/**
  * 建立一隻新魚並加入水族箱
  * @param {GameState} state
  * @param {string} speciesId
- * @param {import('../config/quality.js').QualityId} quality
  */
-export function addFish(state, speciesId, quality) {
+export function addFish(state, speciesId) {
   getSpecies(speciesId); // 確認種類存在
   /** @type {FishData} */
   const fish = {
     uid: state.nextUid++,
     species: speciesId,
-    quality,
     ageSec: 0,
   };
   state.fish.push(fish);
-  const entry = (state.codex[speciesId] ??= { qualities: [], raised: 0 });
+  const entry = (state.codex[speciesId] ??= { raised: 0 });
   entry.raised += 1;
-  if (!entry.qualities.includes(quality)) entry.qualities.push(quality);
   return fish;
 }
 
@@ -110,7 +89,22 @@ export function buyFish(state, speciesId) {
   if (state.fish.length >= tankCapacity()) return { ok: false, reason: '水族箱已經滿了' };
   if (state.coins < price) return { ok: false, reason: '資源不足' };
   state.coins -= price;
-  return { ok: true, fish: addFish(state, speciesId, rollQuality()) };
+  return { ok: true, fish: addFish(state, speciesId) };
+}
+
+/**
+ * 放生：讓水母離開水族箱（不退還資源）
+ * @param {GameState} state
+ * @param {number} uid
+ * @returns {FishData|null}
+ */
+export function releaseFish(state, uid) {
+  const f = state.fish.find((x) => x.uid === uid);
+  if (!f) return null;
+  state.fish = state.fish.filter((x) => x.uid !== uid);
+  const entry = state.codex[f.species];
+  if (entry) entry.released = (entry.released ?? 0) + 1;
+  return f;
 }
 
 /**
@@ -168,6 +162,5 @@ export function settleOffline(state, awaySec) {
 export function codexProgress(state) {
   const species = SPECIES.length;
   const found = SPECIES.filter((s) => state.codex[s.id]).length;
-  const qualities = SPECIES.reduce((n, s) => n + (state.codex[s.id]?.qualities.length ?? 0), 0);
-  return { species, found, qualities, qualitiesTotal: species * QUALITIES.length };
+  return { species, found };
 }

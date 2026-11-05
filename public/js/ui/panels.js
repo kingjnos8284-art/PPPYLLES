@@ -1,12 +1,11 @@
 // @ts-check
 import { SPECIES, getSpecies } from '../config/species.js';
-import { QUALITIES, getQuality } from '../config/quality.js';
 import { LAND_PETS, getLandPet } from '../config/landpets.js';
 import { BALANCE, TEST_MODE, tankCapacity, priceOf } from '../config/balance.js';
 import { DECOR_ENABLED } from '../config/decor.js';
-import { buyFish, buyLandPet, codexProgress, fishIncome, petBonus } from '../core/sim.js';
+import { buyFish, buyLandPet, releaseFish, codexProgress, fishIncome, petBonus } from '../core/sim.js';
 import { fishThumb, petThumb } from '../render/thumb.js';
-import { el, fmt, fmtRate, fmtDuration, qualityBadge, qualityGem, coinIcon } from './dom.js';
+import { el, fmt, fmtRate, fmtDuration, coinIcon } from './dom.js';
 import { openSheet, replaceSheetContent, closeSheet, currentSheet } from './sheet.js';
 import { toast } from './toast.js';
 
@@ -18,6 +17,7 @@ import { toast } from './toast.js';
  * @property {(uid: number|null) => void} select   在水族箱中標示某隻魚
  * @property {() => Promise<void>} resetGame
  * @property {(sec: number) => void} fastForward   測試用：快轉遊戲時間
+ * @property {(uid: number, x?: number, y?: number) => void} onReleased  放生後的畫面效果
  */
 
 /** @type {GameContext} */
@@ -156,16 +156,10 @@ export function openReveal(uid) {
   const f = G.getState().fish.find((x) => x.uid === uid);
   if (!f) return;
   const sp = getSpecies(f.species);
-  const q = getQuality(f.quality);
-  const rare = q.id !== 'gray' && q.id !== 'green';
   const node = el('div', { class: 'reveal' }, [
-    el('div', { class: 'reveal-hero', style: { '--qc': q.color } }, [fishThumb(sp.id, 170, 170)]),
-    el('div', {}, [qualityBadge(q)]),
-    el('div', { class: 'reveal-title' }, [`${rare ? '太幸運了！' : ''}獲得 ${q.name}色品質的${sp.name}`]),
-    el('div', { class: 'muted' }, [
-      `產出倍率 ×${q.incomeMult}`, el('br'),
-      '牠會一直陪伴在水族箱裡。',
-    ]),
+    el('div', { class: 'reveal-hero' }, [fishThumb(sp.id, 170, 170)]),
+    el('div', { class: 'reveal-title' }, [`${sp.name} 來到了水族箱！`]),
+    el('div', { class: 'muted' }, [`每秒 +${fmtRate(sp.income)}`, el('br'), '牠會一直陪伴在水族箱裡。']),
     el('button', { class: 'primary-btn nine-btn', onclick: () => openShop() }, ['繼續逛商店']),
     el('button', { class: 'ghost-btn nine-btn2', onclick: () => { closeSheet(); G.select(uid); } }, ['去看看牠']),
   ]);
@@ -188,26 +182,16 @@ export function openCodex() {
     }, [
       el('div', { class: 'card-thumb' }, [fishThumb(sp.id, 76, 76, { silhouette: !known })]),
       el('div', { class: 'name' }, [known ? sp.name : '？？？']),
-      qualityDots(all ? QUALITIES.map((q) => q.id) : entry?.qualities ?? []),
     ]);
   }));
   openSheet('codex', '水族圖鑑', el('div', {}, [
     el('div', { class: 'codex-summary' }, [
       all
         ? `測試模式：圖鑑全部開放（實際已發現 ${p.found}/${p.species} 種）`
-        : `已發現 ${p.found}/${p.species} 種・品質收集 ${p.qualities}/${p.qualitiesTotal}`,
+        : `已發現 ${p.found}/${p.species} 種`,
     ]),
     grid,
   ]));
-}
-
-/** @param {string[]} owned */
-function qualityDots(owned) {
-  return el('span', { class: 'q-dots' }, QUALITIES.map((q) => {
-    const g = qualityGem(q.id, 'q-dot' + (owned.includes(q.id) ? ' on' : ''));
-    g.title = q.name;
-    return g;
-  }));
 }
 
 /** @param {string} speciesId */
@@ -216,15 +200,12 @@ function openCodexEntry(speciesId) {
   const sp = getSpecies(speciesId);
   const entry = state.codex[speciesId];
   const alive = state.fish.filter((f) => f.species === speciesId).length;
-  const owned = codexAll() ? QUALITIES.map((q) => q.id) : entry?.qualities ?? [];
-  const best = [...QUALITIES].reverse().find((q) => owned.includes(q.id));
   openSheet('codex-entry', sp.name, el('div', {}, [
     el('div', { class: 'info-hero' }, [fishThumb(sp.id, 150, 150)]),
     el('p', { class: 'desc' }, [sp.desc]),
     el('div', { class: 'stat-rows' }, [
-      row('已收集品質', qualityDots(owned)),
-      row('最高品質', best ? qualityBadge(best) : '—'),
       row('累計飼養', `${entry?.raised ?? 0} 隻`),
+      row('累計放生', `${entry?.released ?? 0} 隻`),
       row('目前在水族箱', `${alive} 隻`),
       row('基礎產出', `每秒 +${fmtRate(sp.income)}`),
     ]),
@@ -236,6 +217,7 @@ function openCodexEntry(speciesId) {
 
 /** @param {number} uid */
 export function openFishInfo(uid) {
+  let confirming = false;
   const render = () => {
     const state = G.getState();
     const f = state.fish.find((x) => x.uid === uid);
@@ -243,15 +225,35 @@ export function openFishInfo(uid) {
       return el('div', { class: 'notice' }, ['找不到這隻夥伴。']);
     }
     const sp = getSpecies(f.species);
-    const q = getQuality(f.quality);
     return el('div', {}, [
       el('div', { class: 'info-hero' }, [fishThumb(sp.id, 150, 150)]),
       el('div', { class: 'stat-rows' }, [
-        row('品質', qualityBadge(q)),
         row('目前產出', `每秒 +${fmtRate(fishIncome(f, petBonus(state)))}`),
         row('已陪伴', fmtDuration(f.ageSec)),
       ]),
       el('p', { class: 'desc' }, [sp.desc]),
+      confirming
+        ? el('div', { class: 'release-confirm' }, [
+          el('div', { class: 'muted' }, [`確定要讓${sp.name}回到大海嗎？放生後不會退還珍珠。`]),
+          el('div', { class: 'release-row' }, [
+            el('button', { class: 'ghost-btn nine-btn2', onclick: () => { confirming = false; replaceSheetContent(render()); } }, ['再想想']),
+            el('button', {
+              class: 'danger-btn nine-btn2',
+              onclick: () => {
+                const r = releaseFish(G.getState(), uid);
+                if (!r) return;
+                G.commit();
+                G.onReleased(uid);
+                closeSheet();
+                toast(`${sp.name} 回到了大海，祝牠一路順風`);
+              },
+            }, ['放生']),
+          ]),
+        ])
+        : el('button', {
+          class: 'ghost-btn nine-btn2',
+          onclick: () => { confirming = true; replaceSheetContent(render()); },
+        }, ['放生']),
     ]);
   };
   const sp = getSpecies(G.getState().fish.find((x) => x.uid === uid)?.species ?? SPECIES[0].id);
