@@ -333,8 +333,8 @@ img { -webkit-user-drag: none; }
 @media (max-height: 460px) {
   :root { --dock-h: 46px; }
   .dock-btn span:last-child { display: none; }
-  /* 橫拿手機時，地板空間很少，選單移到上方中央，避免蓋住陸地寵物 */
-  .hud-dock { bottom: auto; top: calc(var(--safe-top) + 6px); }
+  /* 橫拿手機：選單維持在底部，改成精簡版（只有圖示）；寵物會自動避開選單 */
+  .hud-dock { bottom: calc(var(--safe-bottom) + 4px); }
   .dock-btn { width: 50px; }
   .dock-ico { width: 38px; height: 38px; margin: 0; }
 }
