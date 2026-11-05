@@ -14,15 +14,20 @@ const body = $('sheet-body');
 let onCloseCb = null;
 /** @type {string|null} */
 let currentId = null;
+/** 鎖定中的面板（例如開始時選寵物）不能被點背景、按 ✕ 或 Esc 關掉，也不會被其他面板蓋掉 */
+let locked = false;
 
 /**
  * @param {string} id
  * @param {string} heading
  * @param {Node} content
- * @param {{ onClose?: () => void }} [opts]
+ * @param {{ onClose?: () => void, locked?: boolean }} [opts]
  */
 export function openSheet(id, heading, content, opts = {}) {
+  if (locked && id !== currentId) return;
   if (currentId && onCloseCb) onCloseCb();
+  locked = !!opts.locked;
+  sheet.classList.toggle('is-locked', locked);
   currentId = id;
   onCloseCb = opts.onClose ?? null;
   title.textContent = heading;
@@ -41,6 +46,8 @@ export function replaceSheetContent(content) {
 
 export function closeSheet() {
   if (!currentId) return;
+  locked = false;
+  sheet.classList.remove('is-locked');
   sheet.hidden = true;
   backdrop.hidden = true;
   const cb = onCloseCb;
@@ -53,8 +60,13 @@ export function currentSheet() {
   return currentId;
 }
 
-$('sheet-close').addEventListener('click', closeSheet);
-backdrop.addEventListener('click', closeSheet);
+/** 玩家自己關閉（鎖定中的面板不理會） */
+function userClose() {
+  if (!locked) closeSheet();
+}
+
+$('sheet-close').addEventListener('click', userClose);
+backdrop.addEventListener('click', userClose);
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeSheet();
+  if (e.key === 'Escape') userClose();
 });

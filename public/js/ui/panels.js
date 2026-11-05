@@ -2,7 +2,7 @@
 import { SPECIES, getSpecies } from '../config/species.js';
 import { LAND_PETS, getLandPet } from '../config/landpets.js';
 import { BALANCE, TEST_MODE, tankCapacity, priceOf } from '../config/balance.js';
-import { buyFish, buyLandPet, buyTheme, ownsTheme, releaseFish, codexProgress, fishIncome, petBonus, stageOf, growthProgress } from '../core/sim.js';
+import { adoptStarterPet, buyFish, buyLandPet, buyTheme, ownsTheme, releaseFish, codexProgress, fishIncome, petBonus, stageOf, growthProgress } from '../core/sim.js';
 import { fishThumb, petThumb } from '../render/thumb.js';
 import { el, fmt, fmtRate, fmtDuration, coinIcon } from './dom.js';
 import { openSheet, replaceSheetContent, closeSheet, currentSheet } from './sheet.js';
@@ -408,6 +408,7 @@ function resetBlock() {
             await G.resetGame();
             closeSheet();
             toast('已重新開始');
+            openStarterPick();
           },
         }, ['確定重新開始']),
       ]),
@@ -415,6 +416,35 @@ function resetBlock() {
   };
   ask();
   return box;
+}
+
+/**
+ * 開始遊戲時選擇第一隻陸地寵物（三選一、免費）。選好之前面板關不掉。
+ */
+export function openStarterPick() {
+  const cards = LAND_PETS.map((p) => el('div', { class: 'card nine-card' }, [
+    el('div', { class: 'card-thumb' }, [petThumb(p.id, 64, 64)]),
+    el('div', {}, [
+      el('div', { class: 'card-name' }, [p.name]),
+      el('div', { class: 'card-meta' }, [`${p.breed}・全體產出 +${Math.round(p.bonus * 100)}%`]),
+      el('div', { class: 'card-meta starter-desc' }, [p.desc]),
+    ]),
+    el('button', {
+      class: 'buy-btn nine-btn',
+      onclick: () => {
+        if (!adoptStarterPet(G.getState(), p.id)) return;
+        G.commit();
+        closeSheet();
+        toast(`${p.name} 搬進了房間！點水母或 ${p.name} 看看`);
+      },
+    }, ['就是牠']),
+  ]));
+  openSheet('starter', '選擇你的第一隻夥伴', el('div', {}, [
+    el('p', { class: 'muted starter-lead' }, [
+      '牠會免費陪著你。其他夥伴之後可以在商店用珍珠帶回家。',
+    ]),
+    el('div', { class: 'card-list' }, cards),
+  ]), { locked: true });
 }
 
 /** 測試工具（只在測試模式出現） */

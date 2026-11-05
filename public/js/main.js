@@ -11,7 +11,7 @@ import { Scene } from './render/scene.js';
 import { setThumbAssets } from './render/thumb.js';
 import { updateHud } from './ui/hud.js';
 import {
-  initPanels, openShop, openCodex, openDecor, openSettings, openFishInfo, openOffline, currentSheet,
+  initPanels, openStarterPick, openShop, openCodex, openDecor, openSettings, openFishInfo, openOffline, currentSheet,
 } from './ui/panels.js';
 import { toast } from './ui/toast.js';
 import { $, fmt } from './ui/dom.js';
@@ -111,9 +111,8 @@ async function boot() {
 
   $('boot').classList.add('done');
   setTimeout(() => $('boot').remove(), 600);
-  if (!saved) {
-    setTimeout(() => toast('歡迎來到你的水族箱！點擊水母或貓咪看看'), 900);
-  }
+  // 還沒有陸地寵物（新遊戲，或上次選之前就關掉了）：請玩家選第一隻
+  if (state.landPets.length === 0) setTimeout(openStarterPick, 500);
 }
 
 function startLoop() {

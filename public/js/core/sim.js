@@ -160,6 +160,18 @@ export function ownsTheme(state, themeId, basePrice) {
 }
 
 /**
+ * 選擇第一隻陸地寵物（免費，只有還沒有任何寵物時可以選）
+ * @param {GameState} state
+ * @param {string} petId
+ */
+export function adoptStarterPet(state, petId) {
+  if (state.landPets.length > 0) return false;
+  getLandPet(petId);
+  state.landPets.push({ type: petId, lastTapAt: 0, affection: 0 });
+  return true;
+}
+
+/**
  * 購買陸地寵物
  * @param {GameState} state
  * @param {string} petId

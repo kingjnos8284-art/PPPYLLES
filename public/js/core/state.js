@@ -62,7 +62,7 @@ export function createNewState(now) {
     totalEarned: 0,
     nextUid: 1,
     fish: [],
-    landPets: [{ type: BALANCE.starterPet, lastTapAt: 0, affection: 0 }],
+    landPets: [], // 開始時由玩家選擇第一隻
     codex: {},
     memorial: [],
     decor: { owned: [], placed: [] },
@@ -110,7 +110,7 @@ export function migrate(raw) {
     }
     raw.version = 4;
   }
-  // 陸地寵物：去除不認得與重複的，並確保有初始寵物
+  // 陸地寵物：去除不認得與重複的（沒有任何寵物時，開啟遊戲會請玩家選一隻）
   /** @type {Set<string>} */
   const seenPets = new Set();
   raw.landPets = (raw.landPets ?? []).filter((/** @type {any} */ p) => {
@@ -118,7 +118,6 @@ export function migrate(raw) {
     seenPets.add(p.type);
     return true;
   });
-  if (!seenPets.has(BALANCE.starterPet)) raw.landPets.unshift({ type: BALANCE.starterPet, lastTapAt: 0, affection: 0 });
 
   // 已移除成長、壽命與品質：清掉舊存檔的對應欄位（v4 → v5）
   for (const f of raw.fish ?? []) { delete f.lifeSec; delete f.quality; }

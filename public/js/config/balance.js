@@ -20,9 +20,8 @@ export const TEST_MODE = {
 export const BALANCE = {
   /** 新玩家起始資源 */
   startCoins: 1500,
-  /** 新玩家起始魚種（固定灰色品質）與陸地寵物 */
+  /** 新玩家起始水母（陸地寵物由玩家開始時三選一） */
   starterFish: 'star_blue',
-  starterPet: 'cat_tuxedo',
 
   /** 水母「成年」時在畫面上的大小倍率。1 = 美術原始設定大小，數字越小越小 */
   creatureScale: 0.6,

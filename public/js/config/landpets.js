@@ -3,7 +3,7 @@
  * 陸地寵物：住在房間裡（貓在貓跳台、狗在狗窩旁），永遠不會死亡，可以點擊互動。
  *
  * kind         'cat' 貓 / 'dog' 狗：決定牠會待在背景的哪一種位置
- * price        購買價格（0 = 初始贈送）
+ * price        商店購買價格（開始遊戲時可以免費三選一帶走一隻）
  * bonus        擁有時全體水中夥伴產出加成（0.05 = +5%）
  * tapReward    點擊互動時，獎勵「目前每秒產出 × 秒數」
  * size / speed / shape / color   沒有美術或背景沒有指定位置時使用的占位設定
@@ -30,7 +30,7 @@ export const LAND_PETS = [
   {
     id: 'cat_tuxedo', kind: 'cat', name: 'OREO', breed: '賓士貓',
     desc: '金色眼睛的賓士貓，最喜歡窩在貓跳台上看水母漂來漂去。',
-    price: 0, bonus: 0.1, tapReward: 20, size: 70, speed: 12, shape: 'capybara', color: '#2b2b33',
+    price: 5000, bonus: 0.1, tapReward: 20, size: 70, speed: 12, shape: 'capybara', color: '#2b2b33',
   },
   {
     id: 'cat_tabby', kind: 'cat', name: 'LUNA', breed: '虎斑貓',
