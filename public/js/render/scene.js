@@ -781,18 +781,27 @@ export class Scene {
         const fr = Math.floor(Math.max(0, t + f.phase) * sprite.fps) % sprite.frames;
         ({ x: ax, y: ay } = sprite.tops[fr]);
       }
-      const cw = Math.max(16, L * 0.36);
+      const crown = this.assets.crown;
+      const cb = this.assets.crownBounds;
+      // 像素王冠：每一格放大成整數個螢幕像素，保持銳利
+      const px = crown && cb ? Math.max(2, Math.round((L * 0.24) / cb.w)) : 0;
+      const cw = crown && cb ? px * cb.w : Math.max(16, L * 0.36);
       const since = t - f.crownAt;
       // 剛戴上時從上方落下、彈一下
       const pop = since < 0.7 ? 1 + Math.sin(Math.min(1, since / 0.7) * Math.PI) * 0.35 : 1;
       const drop = since < 0.4 ? (1 - since / 0.4) * L * 0.4 : 0;
+      // 浮在頭頂上方，留一點距離，輕輕上下飄
+      let gap = L * 0.05 + Math.sin(t * 2 + f.phase) * L * 0.015;
+      // 靠近水面時不要讓王冠超出水族箱（往下貼近頭頂）
+      const crownH = crown && cb ? px * cb.h : cw * 0.62;
+      if (this.tankClip) {
+        const minBase = this.tankClip.y + crownH + 3;
+        const base = f.y + ay * L - gap;
+        if (base < minBase) gap -= minBase - base;
+      }
       ctx.save();
-      // 底邊稍微壓進傘頂，看起來是戴在頭上
-      ctx.translate(ax * L, ay * L + cw * 0.18 - drop);
-      ctx.rotate(Math.sin(t * 1.3 + f.phase) * 0.06);
+      ctx.translate(ax * L, ay * L - gap - drop);
       ctx.scale(pop, pop);
-      const crown = this.assets.crown;
-      const cb = this.assets.crownBounds;
       if (crown && cb) {
         // 美術王冠：以王冠底邊中心對齊原點
         const F = cw * (crown.fw / cb.w);            // 整格要畫多大

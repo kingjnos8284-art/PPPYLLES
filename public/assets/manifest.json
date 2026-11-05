@@ -188,16 +188,13 @@
   "ui": {
     "heartBubble": "pets/heart-bubble-v1.png",
     "crown": {
-      "src": "ui/crown-sparkle-v1.webp",
-      "cols": 6,
-      "rows": 4,
-      "frames": 24,
-      "fps": 10,
+      "src": "ui/crown-pixel-v1.png",
+      "frames": 1,
       "bounds": {
-        "x": 52,
-        "y": 89,
-        "w": 280,
-        "h": 206
+        "x": 0,
+        "y": 0,
+        "w": 17,
+        "h": 14
       }
     }
   },
