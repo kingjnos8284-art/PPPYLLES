@@ -24,6 +24,9 @@ export const BALANCE = {
   starterFish: 'star_blue',
   starterPet: 'cat_tuxedo',
 
+  /** 水中寵物（水母、小魚）在畫面上的整體大小倍率。1 = 原本大小，數字越小越小 */
+  creatureScale: 0.75,
+
   /** 水族箱最多可養幾隻魚 */
   tankCapacity: 12,
 
