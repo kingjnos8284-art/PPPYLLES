@@ -1,7 +1,5 @@
 // @ts-check
 import { BALANCE } from './config/balance.js';
-import { getSpecies } from './config/species.js';
-import { getQuality } from './config/quality.js';
 import { getLandPet } from './config/landpets.js';
 import { createNewState } from './core/state.js';
 import { addFish, advance, settleOffline, tapLandPet } from './core/sim.js';
@@ -39,13 +37,6 @@ function commit() {
   save();
 }
 
-/** 處理壽終通知 @param {import('./core/state.js').FishData[]} died */
-function announceDeaths(died) {
-  for (const f of died) {
-    toast(`${getQuality(f.quality).name}色的${getSpecies(f.species).name} 安詳地走完了一生`);
-  }
-}
-
 /**
  * 結算「從上次結算到現在」的時間。
  * 短時間（畫面持續開著）直接推進；長時間（切到背景、關掉再開）視為離線，套用 6 小時上限。
@@ -57,16 +48,13 @@ function catchUp(now, allowPopup) {
   state.lastTick = now;
   if (elapsed <= 0) return; // 手機時間被往回調時，不給也不扣
   if (elapsed < 15) {
-    const r = advance(state, elapsed, now);
-    if (r.died.length) { announceDeaths(r.died); commit(); }
+    advance(state, elapsed);
     return;
   }
-  const r = settleOffline(state, elapsed, now);
+  const r = settleOffline(state, elapsed);
   commit();
-  if (allowPopup && elapsed >= BALANCE.offlinePopupMinSec && (r.earned >= 1 || r.died.length)) {
+  if (allowPopup && elapsed >= BALANCE.offlinePopupMinSec && r.earned >= 1) {
     openOffline(r);
-  } else if (r.died.length) {
-    announceDeaths(r.died);
   }
 }
 
@@ -93,8 +81,7 @@ async function boot() {
     },
     fastForward: (sec) => {
       // 不受離線上限限制，直接推進遊戲時間（成長、老化、收益都會發生）
-      const r = advance(state, sec, Date.now());
-      announceDeaths(r.died);
+      advance(state, sec);
       commit();
     },
   });

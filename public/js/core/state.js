@@ -15,8 +15,7 @@ export const SAVE_VERSION = 4;
  * @property {number} uid
  * @property {string} species
  * @property {import('../config/quality.js').QualityId} quality
- * @property {number} ageSec        已存活秒數（遊戲內時間）
- * @property {number} lifeSec       壽命秒數（購買時決定）
+ * @property {number} ageSec        已陪伴秒數
  * @property {string} [nickname]
  */
 
@@ -44,7 +43,7 @@ export const SAVE_VERSION = 4;
  * @property {FishData[]} fish
  * @property {LandPetData[]} landPets
  * @property {Record<string, CodexEntry>} codex
- * @property {{ species: string, quality: string, at: number }[]} memorial  離世紀錄（保留最近 50 筆）
+ * @property {{ species: string, quality: string, at: number }[]} memorial  舊版的離世紀錄（已不再使用，保留欄位相容舊存檔）
  * @property {{ owned: string[], placed: { id: string, x: number, y: number }[] }} decor  預留
  * @property {{ userId: string|null }} account  預留：日後帳號系統
  */
@@ -115,6 +114,9 @@ export function migrate(raw) {
     return true;
   });
   if (!seenPets.has(BALANCE.starterPet)) raw.landPets.unshift({ type: BALANCE.starterPet, lastTapAt: 0, affection: 0 });
+
+  // 已移除成長與壽命：清掉舊存檔的壽命欄位
+  for (const f of raw.fish ?? []) delete f.lifeSec;
 
   // 保險：任何不認得的種類都清掉，避免畫面出錯
   raw.fish = (raw.fish ?? []).filter((/** @type {any} */ f) => hasSpecies(f.species));

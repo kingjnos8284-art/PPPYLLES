@@ -4,7 +4,7 @@ import { QUALITIES, getQuality } from '../config/quality.js';
 import { LAND_PETS, getLandPet } from '../config/landpets.js';
 import { BALANCE, TEST_MODE, tankCapacity, priceOf } from '../config/balance.js';
 import { DECOR_ENABLED } from '../config/decor.js';
-import { buyFish, buyLandPet, codexProgress, fishIncome, petBonus, stageOf } from '../core/sim.js';
+import { buyFish, buyLandPet, codexProgress, fishIncome, petBonus } from '../core/sim.js';
 import { fishThumb, petThumb } from '../render/thumb.js';
 import { el, fmt, fmtRate, fmtDuration, qualityBadge, qualityGem, coinIcon } from './dom.js';
 import { openSheet, replaceSheetContent, closeSheet, currentSheet } from './sheet.js';
@@ -60,7 +60,7 @@ export function openShop(tab) {
     if (shopTab === 'fish') {
       const full = state.fish.length >= tankCapacity();
       list = el('div', { class: 'card-list' }, [
-        full ? el('div', { class: 'notice' }, ['水族箱已經滿了，等夥伴自然離開後才能再放入新的。']) : null,
+        full ? el('div', { class: 'notice' }, ['水族箱已經滿了。']) : null,
         ...[...SPECIES].sort((x, y) => x.price - y.price).map((sp) => {
           // 太貴的魚種先以剪影顯示，累積到一定資源後揭曉，保留一點期待感
           const unlocked = codexAll() || !!state.codex[sp.id] || sp.price <= Math.max(150, state.totalEarned);
@@ -70,11 +70,7 @@ export function openShop(tab) {
             el('div', { class: 'card-thumb' }, [fishThumb(sp.id, 64, 64, { silhouette: !unlocked })]),
             el('div', {}, [
               el('div', { class: 'card-name' }, [unlocked ? sp.name : '？？？']),
-              el('div', { class: 'card-meta' }, [
-                `每秒 +${fmtRate(sp.income)} 起・壽命約 ${Math.round(sp.lifeHours / 24 * 10) / 10} 天`,
-                el('br'),
-                `${fmtDuration(sp.adultMin * 60)}長成`,
-              ]),
+              el('div', { class: 'card-meta' }, [`每秒 +${fmtRate(sp.income)} 起`]),
             ]),
             el('button', {
               class: 'buy-btn nine-btn',
@@ -167,8 +163,8 @@ export function openReveal(uid) {
     el('div', {}, [qualityBadge(q)]),
     el('div', { class: 'reveal-title' }, [`${rare ? '太幸運了！' : ''}獲得 ${q.name}色品質的${sp.name}`]),
     el('div', { class: 'muted' }, [
-      `產出倍率 ×${q.incomeMult}・壽命 ×${q.lifeMult}`, el('br'),
-      '牠會從幼體開始，慢慢長大。',
+      `產出倍率 ×${q.incomeMult}`, el('br'),
+      '牠會一直陪伴在水族箱裡。',
     ]),
     el('button', { class: 'primary-btn nine-btn', onclick: () => openShop() }, ['繼續逛商店']),
     el('button', { class: 'ghost-btn nine-btn2', onclick: () => { closeSheet(); G.select(uid); } }, ['去看看牠']),
@@ -230,9 +226,7 @@ function openCodexEntry(speciesId) {
       row('最高品質', best ? qualityBadge(best) : '—'),
       row('累計飼養', `${entry?.raised ?? 0} 隻`),
       row('目前在水族箱', `${alive} 隻`),
-      row('成年基礎產出', `每秒 +${fmtRate(sp.income)}`),
-      row('長成時間', fmtDuration(sp.adultMin * 60)),
-      row('基礎壽命', fmtDuration(sp.lifeHours * 3600)),
+      row('基礎產出', `每秒 +${fmtRate(sp.income)}`),
     ]),
     el('button', { class: 'ghost-btn nine-btn2', onclick: openCodex }, ['返回圖鑑']),
   ]));
@@ -246,23 +240,14 @@ export function openFishInfo(uid) {
     const state = G.getState();
     const f = state.fish.find((x) => x.uid === uid);
     if (!f) {
-      return el('div', { class: 'notice' }, ['牠已經安詳地離開了。']);
+      return el('div', { class: 'notice' }, ['找不到這隻夥伴。']);
     }
     const sp = getSpecies(f.species);
     const q = getQuality(f.quality);
-    const stage = BALANCE.stages[stageOf(f)];
-    const lifeLeft = f.lifeSec - f.ageSec;
-    const lifePct = Math.max(0, 1 - f.ageSec / f.lifeSec);
-    const growPct = Math.min(1, f.ageSec / (sp.adultMin * 60));
     return el('div', {}, [
       el('div', { class: 'info-hero' }, [fishThumb(sp.id, 150, 150)]),
       el('div', { class: 'stat-rows' }, [
         row('品質', qualityBadge(q)),
-        row('階段', stage.name),
-        growPct < 1
-          ? rowBar('成長', `還要 ${fmtDuration(sp.adultMin * 60 - f.ageSec)}`, growPct, false)
-          : null,
-        rowBar('剩餘壽命', fmtDuration(lifeLeft), lifePct, lifePct < 0.15),
         row('目前產出', `每秒 +${fmtRate(fishIncome(f, petBonus(state)))}`),
         row('已陪伴', fmtDuration(f.ageSec)),
       ]),
@@ -282,32 +267,18 @@ function row(label, value) {
   return el('div', { class: 'stat-row' }, [el('span', {}, [label]), el('span', {}, [value])]);
 }
 
-/** @param {string} label @param {string} value @param {number} pct @param {boolean} warn */
-function rowBar(label, value, pct, warn) {
-  return el('div', { style: { padding: '8px 2px', borderBottom: '2px dashed var(--line)' } }, [
-    el('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '14px' } }, [
-      el('span', { style: { color: 'var(--ink-soft)' } }, [label]), el('span', { style: { fontWeight: '700' } }, [value]),
-    ]),
-    el('div', { class: 'bar' + (warn ? ' warn' : '') }, [el('i', { style: { width: `${(pct * 100).toFixed(1)}%` } })]),
-  ]);
-}
-
 // ================= 離線收益 =================
 
 /**
- * @param {{ earned: number, died: import('../core/state.js').FishData[], awaySec: number, countedSec: number }} r
+ * @param {{ earned: number, awaySec: number, countedSec: number }} r
  */
 export function openOffline(r) {
   stopLive();
   const capped = r.awaySec > r.countedSec + 1;
-  const names = r.died.map((f) => getSpecies(f.species).name);
   openSheet('offline', '歡迎回來', el('div', { class: 'reveal' }, [
     el('div', { class: 'muted' }, [`你離開了 ${fmtDuration(r.awaySec)}，水族箱裡的夥伴們幫你累積了`]),
     el('div', { class: 'offline-amount' }, [coinIcon(), `+${fmt(r.earned)}`]),
     capped ? el('div', { class: 'muted' }, [`（離線收益最多計算 ${BALANCE.offlineCapHours} 小時）`]) : null,
-    names.length
-      ? el('div', { class: 'muted', style: { marginTop: '10px' } }, [`這段期間，${names.join('、')} 安詳地走完了牠的一生。`])
-      : null,
     el('button', { class: 'primary-btn nine-btn', onclick: closeSheet }, ['收下']),
   ]));
 }

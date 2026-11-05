@@ -3,7 +3,6 @@ import { getSpecies } from '../config/species.js';
 import { BALANCE } from '../config/balance.js';
 import { getQuality } from '../config/quality.js';
 import { getLandPet } from '../config/landpets.js';
-import { growthScale, stageOf } from '../core/sim.js';
 import { drawSprite, drawCover } from './assets.js';
 import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder.js';
 
@@ -369,7 +368,7 @@ export class Scene {
         this.pickTarget(e);
         this.fish.set(d.uid, e);
       }
-      e.L = getSpecies(d.species).size * this.unit * BALANCE.creatureScale * growthScale(d);
+      e.L = getSpecies(d.species).size * this.unit * BALANCE.creatureScale;
       this.assets.requestFish(d.species);
     }
     for (const e of this.fish.values()) {
@@ -704,7 +703,6 @@ export class Scene {
       ctx.rotate(tilt);
     }
     if (f.dying >= 0) ctx.rotate(Math.min(Math.PI, (t - f.dying) * 1.5));
-    if (data && stageOf(data) === 'elder') ctx.globalAlpha = alpha * 0.85;
 
     if (sprite) {
       const slow = Math.hypot(f.vx, f.vy) < sp.speed * this.unit * 0.3;

@@ -12,31 +12,6 @@ import { getLandPet } from '../config/landpets.js';
 /** @typedef {import('./state.js').GameState} GameState */
 /** @typedef {import('./state.js').FishData} FishData */
 
-/**
- * @param {FishData} f
- * @returns {import('../config/balance.js').StageId}
- */
-export function stageOf(f) {
-  const sp = getSpecies(f.species);
-  const adultSec = sp.adultMin * 60;
-  if (f.ageSec < adultSec * BALANCE.fryFraction) return 'fry';
-  if (f.ageSec < adultSec) return 'juvenile';
-  if (f.ageSec < f.lifeSec * BALANCE.elderFraction) return 'adult';
-  return 'elder';
-}
-
-/**
- * 成長進度 0~1（幼魚到成魚之間用於平滑縮放）
- * @param {FishData} f
- */
-export function growthScale(f) {
-  const sp = getSpecies(f.species);
-  const adultSec = sp.adultMin * 60;
-  const t = Math.min(1, f.ageSec / adultSec);
-  const s0 = BALANCE.stages.fry.scale;
-  return s0 + (1 - s0) * Math.sqrt(t);
-}
-
 /** 陸地寵物帶來的總加成 @param {GameState} state */
 export function petBonus(state) {
   return state.landPets.reduce((sum, p) => sum + getLandPet(p.type).bonus, 0);
@@ -50,8 +25,7 @@ export function petBonus(state) {
 export function fishIncome(f, bonus) {
   const sp = getSpecies(f.species);
   const q = getQuality(f.quality);
-  const st = BALANCE.stages[stageOf(f)];
-  return sp.income * q.incomeMult * st.incomeMult * (1 + bonus);
+  return sp.income * q.incomeMult * (1 + bonus);
 }
 
 /** 全體每秒產出 @param {GameState} state */
@@ -63,43 +37,21 @@ export function totalIncome(state) {
 /**
  * @typedef {Object} AdvanceResult
  * @property {number} earned
- * @property {FishData[]} died
  */
 
 /**
- * 推進遊戲時間。會依序：計算收益 → 增加年齡 → 處理壽終。
- * 長時間（離線）會切成小段計算，確保魚在中途長大或離世時收益正確。
+ * 推進遊戲時間：累積收益，並記錄每隻夥伴已陪伴的時間。
+ * 水中寵物沒有成長與壽命，不會離世。
  * @param {GameState} state
  * @param {number} dtSec
- * @param {number} now  現在時間（ms），用來寫入離世紀錄
  * @returns {AdvanceResult}
  */
-export function advance(state, dtSec, now) {
+export function advance(state, dtSec) {
   /** @type {AdvanceResult} */
-  const result = { earned: 0, died: [] };
+  const result = { earned: 0 };
   if (dtSec <= 0) return result;
-  const STEP = 30;
-  let remaining = dtSec;
-  while (remaining > 0) {
-    const dt = Math.min(STEP, remaining);
-    remaining -= dt;
-    const bonus = petBonus(state);
-    for (const f of state.fish) {
-      // 若這一小段中途壽終，只算到壽終為止
-      const alive = Math.max(0, Math.min(dt, f.lifeSec - f.ageSec));
-      result.earned += fishIncome(f, bonus) * alive;
-      f.ageSec += dt;
-    }
-    const dead = state.fish.filter((f) => f.ageSec >= f.lifeSec);
-    if (dead.length) {
-      state.fish = state.fish.filter((f) => f.ageSec < f.lifeSec);
-      for (const f of dead) {
-        result.died.push(f);
-        state.memorial.unshift({ species: f.species, quality: f.quality, at: now });
-      }
-      state.memorial.length = Math.min(state.memorial.length, 50);
-    }
-  }
+  result.earned = totalIncome(state) * dtSec;
+  for (const f of state.fish) f.ageSec += dtSec;
   state.coins += result.earned;
   state.totalEarned += result.earned;
   return result;
@@ -127,17 +79,13 @@ export function rollQuality(rand = Math.random) {
  * @param {import('../config/quality.js').QualityId} quality
  */
 export function addFish(state, speciesId, quality) {
-  const sp = getSpecies(speciesId);
-  const q = getQuality(quality);
-  // 壽命加入 ±10% 的個體差異，讓魚不會同時離世
-  const variance = 0.9 + Math.random() * 0.2;
+  getSpecies(speciesId); // 確認種類存在
   /** @type {FishData} */
   const fish = {
     uid: state.nextUid++,
     species: speciesId,
     quality,
     ageSec: 0,
-    lifeSec: Math.round(sp.lifeHours * 3600 * q.lifeMult * variance),
   };
   state.fish.push(fish);
   const entry = (state.codex[speciesId] ??= { qualities: [], raised: 0 });
@@ -204,25 +152,16 @@ export function tapLandPet(state, petId, now) {
 }
 
 /**
- * 計算離線結算
+ * 計算離線結算：收益最多計算 BALANCE.offlineCapHours 小時
  * @param {GameState} state
  * @param {number} awaySec  真實離開秒數
- * @param {number} now
  */
-export function settleOffline(state, awaySec, now) {
-  const capSec = BALANCE.offlineCapHours * 3600;
-  const incomeSec = Math.min(awaySec, capSec);
-  if (BALANCE.offlineAgingCapped) {
-    const r = advance(state, incomeSec, now);
-    return { ...r, awaySec, countedSec: incomeSec };
-  }
-  // 魚照真實時間老化，但收益只算前 capSec 秒
-  const before = state.coins;
-  const r1 = advance(state, incomeSec, now);
-  const r2 = advance(state, awaySec - incomeSec, now);
-  state.coins = before + r1.earned;
-  state.totalEarned -= r2.earned;
-  return { earned: r1.earned, died: [...r1.died, ...r2.died], awaySec, countedSec: incomeSec };
+export function settleOffline(state, awaySec) {
+  const countedSec = Math.min(awaySec, BALANCE.offlineCapHours * 3600);
+  const r = advance(state, countedSec);
+  // 已陪伴時間照真實時間計算
+  for (const f of state.fish) f.ageSec += awaySec - countedSec;
+  return { earned: r.earned, awaySec, countedSec };
 }
 
 /** 圖鑑完成度 @param {GameState} state */
