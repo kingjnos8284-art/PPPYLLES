@@ -318,8 +318,10 @@ export class Scene {
     const sp = getSpecies(f.species);
     const s = this.swim;
     if (sp.shape === 'jelly') {
-      f.tx = clamp(f.x + (Math.random() - 0.5) * 120, s.left + 40, s.right - 40);
-      f.ty = s.top + Math.random() * (s.bottom - s.top) * 0.8;
+      // 每次往一個較遠的位置漂過去
+      const range = (s.right - s.left) * BALANCE.swimRange;
+      f.tx = clamp(f.x + (Math.random() - 0.5) * 2 * range, s.left + 30, s.right - 30);
+      f.ty = s.top + Math.random() * (s.bottom - s.top) * 0.85;
     } else if (Math.random() < 0.3) {
       // 偶爾停下來發呆（使用懸浮動畫）
       f.tx = f.x; f.ty = f.y;
@@ -330,7 +332,7 @@ export class Scene {
       f.tx = s.left + Math.random() * (s.right - s.left);
       f.ty = s.top + Math.random() * (s.bottom - s.top);
     }
-    f.retarget = this.time + 4 + Math.random() * 8;
+    f.retarget = this.time + 6 + Math.random() * 10;
   }
 
   /** 實際身體大小（動畫圖四周有留白） @param {FishEnt} f */
@@ -417,7 +419,7 @@ export class Scene {
       }
       const sp = getSpecies(f.species);
       if (t > f.retarget || (t > f.idleUntil && Math.hypot(f.tx - f.x, f.ty - f.y) < 16)) this.pickTarget(f);
-      const speed = sp.speed * this.unit * f.speedMul * (0.8 + 0.2 * Math.sin(t * 0.7 + f.phase));
+      const speed = sp.speed * BALANCE.swimSpeed * this.unit * f.speedMul * (0.8 + 0.2 * Math.sin(t * 0.7 + f.phase));
       const dx = f.tx - f.x, dy = f.ty - f.y;
       const d = Math.hypot(dx, dy) || 1;
       const steer = sp.shape === 'jelly' ? 0.6 : 1.6;

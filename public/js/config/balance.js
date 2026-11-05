@@ -24,11 +24,12 @@ export const BALANCE = {
   starterFish: 'star_blue',
   starterPet: 'cat_tuxedo',
 
-  /**
-   * 水母在畫面上的大小倍率。1 = 美術原始設定大小，數字越小越小。
-   * 0.25 ≈ 先前「0.45 × 幼年體型 0.55」的大小（所有水母固定為幼年大小）。
-   */
-  creatureScale: 0.25,
+  /** 水母在畫面上的大小倍率。1 = 美術原始設定大小，數字越小越小 */
+  creatureScale: 0.6,
+  /** 水母游動速度倍率。1 = species.js 設定的速度 */
+  swimSpeed: 2,
+  /** 水母每次游動的距離（佔水族箱寬度的比例，0~1）。越大游得越遠 */
+  swimRange: 0.7,
 
   /** 水族箱最多可養幾隻魚 */
   tankCapacity: 12,
