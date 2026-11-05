@@ -45,6 +45,7 @@ export const SAVE_VERSION = 5;
  * @property {any[]} memorial  舊版的離世紀錄（已不再使用，保留欄位相容舊存檔）
  * @property {{ owned: string[], placed: { id: string, x: number, y: number }[] }} decor  預留
  * @property {{ userId: string|null }} account  預留：日後帳號系統
+ * @property {string} theme        房間主題（room / forest / stellar）
  */
 
 /**
@@ -66,6 +67,7 @@ export function createNewState(now) {
     memorial: [],
     decor: { owned: [], placed: [] },
     account: { userId: null },
+    theme: 'room',
   };
   return state;
 }
@@ -81,6 +83,7 @@ export function migrate(raw) {
   if (raw.version > SAVE_VERSION) return null; // 比程式還新的存檔，不認得
   raw.decor ??= { owned: [], placed: [] };
   raw.account ??= { userId: null };
+  raw.theme ??= 'room';
   raw.memorial ??= [];
 
   // v1 → v2：生物名單改為水母為主。已移除的種類換成星光水母（保留品質與年齡），圖鑑只留現有種類

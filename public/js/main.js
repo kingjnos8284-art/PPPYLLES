@@ -59,12 +59,10 @@ function catchUp(now, allowPopup) {
 }
 
 async function boot() {
-  const [assets, saved, now] = await Promise.all([
-    loadAssets(),
-    backend.save.load(),
-    backend.time.now(),
-  ]);
+  const [saved, now] = await Promise.all([backend.save.load(), backend.time.now()]);
   state = saved ?? newGame(now);
+  const assets = await loadAssets(state.theme);
+  state.theme = assets.theme;
   setThumbAssets(assets);
 
   const canvas = /** @type {HTMLCanvasElement} */ ($('stage'));
@@ -77,6 +75,14 @@ async function boot() {
     resetGame: async () => {
       await backend.save.clear();
       state = newGame(Date.now());
+      commit();
+    },
+    themes: () => assets.themes,
+    setTheme: async (id) => {
+      const ok = await assets.setTheme(id);
+      if (!ok) return;
+      state.theme = id;
+      scene.resize();
       commit();
     },
     onReleased: (uid) => { scene.releaseEffect(uid); scene.selectedUid = null; },

@@ -13,6 +13,20 @@
 
 ---
 
+## 0. 房間主題
+
+目前有三套主題，玩家可在「設定 → 房間主題」切換，選擇會存在存檔中：
+
+| id | 名稱 | 檔案 |
+|---|---|---|
+| `room` | 原木房間 | `bg/room-landscape-v1.webp`、`bg/room-portrait-v1.webp` |
+| `forest` | 森林精靈屋 | `bg/forest-landscape-v1.webp`、`bg/forest-portrait-v1.webp` |
+| `stellar` | 星空水晶館 | `bg/stellar-landscape-v1.webp`、`bg/stellar-portrait-v1.webp` |
+
+主題設定在 `public/assets/manifest.json` 的 `themes`，每個主題有橫／直背景、`layout`（水族箱水域、游動範圍、寵物位置）與縮圖。
+寵物位置可指定給特定寵物（`pet`），或標成備用位置（`fallback`）：當一般位置超出畫面或被底部選單擋住時才使用。
+新增主題：沿用相同構圖（左側貓跳台、中央水族箱、右下兩張狗床），交給 Claude 量測位置即可。
+
 ## 1. 主畫面背景（水族箱）
 
 > **目前採用：房間場景** — 木造房間裡有一面大型水族窗，魚游在窗內，陸地寵物走在木地板上。

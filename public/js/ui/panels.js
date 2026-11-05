@@ -18,6 +18,8 @@ import { toast } from './toast.js';
  * @property {() => Promise<void>} resetGame
  * @property {(sec: number) => void} fastForward   測試用：快轉遊戲時間
  * @property {(uid: number, x?: number, y?: number) => void} onReleased  放生後的畫面效果
+ * @property {() => import('../render/assets.js').ThemeInfo[]} themes   所有房間主題
+ * @property {(id: string) => Promise<void>} setTheme                   切換房間主題
  */
 
 /** @type {GameContext} */
@@ -303,6 +305,7 @@ export function openSettings(opts) {
       el('img', { src: '/assets/ui/logo-v1.png', alt: '' }),
       el('div', { class: 'boot-title' }, ['PPPYLLES']),
     ]),
+    themePicker(),
     TEST_MODE.enabled && TEST_MODE.tools ? testTools() : null,
     el('div', { class: 'stat-rows' }, [
       row('累計獲得資源', fmt(state.totalEarned)),
@@ -329,6 +332,29 @@ export function openSettings(opts) {
       },
     }, ['重新開始遊戲']),
   ]));
+}
+
+/** 房間主題選擇 */
+function themePicker() {
+  const current = G.getState().theme;
+  return el('div', { class: 'theme-picker' }, [
+    el('div', { class: 'test-title' }, ['房間主題']),
+    el('div', { class: 'theme-grid' }, G.themes().map((t) => el('button', {
+      class: 'theme-card nine-card' + (t.id === current ? ' is-active' : ''),
+      onclick: async (/** @type {MouseEvent} */ e) => {
+        if (t.id === G.getState().theme) return;
+        const btn = /** @type {HTMLButtonElement} */ (e.currentTarget);
+        btn.classList.add('is-loading');
+        await G.setTheme(t.id);
+        document.querySelectorAll('.theme-card').forEach((n) => n.classList.remove('is-active', 'is-loading'));
+        btn.classList.add('is-active');
+        toast(`房間換成了「${t.name}」`);
+      },
+    }, [
+      t.thumb ? el('img', { class: 'theme-thumb', src: '/assets/' + t.thumb, alt: '', draggable: 'false' }) : null,
+      el('div', { class: 'theme-name' }, [t.name]),
+    ]))),
+  ]);
 }
 
 /** 測試工具（只在測試模式出現） */

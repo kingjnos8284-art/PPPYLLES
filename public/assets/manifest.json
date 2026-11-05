@@ -1,139 +1,5 @@
 {
-  "background": {
-    "src": "bg/room-landscape-v1.webp",
-    "layout": {
-      "tank": {
-        "x0": 0.222,
-        "y0": 0.095,
-        "x1": 0.962,
-        "y1": 0.705,
-        "r": 0.02
-      },
-      "swim": {
-        "x0": 0.25,
-        "y0": 0.15,
-        "x1": 0.935,
-        "y1": 0.62
-      },
-      "floorY": 0.855,
-      "floorX": [
-        0.04,
-        0.97
-      ],
-      "focusX": 0.59,
-      "pets": {
-        "catSize": 0.085,
-        "dogSize": 0.1,
-        "spots": [
-          {
-            "kind": "cat",
-            "x": 0.144,
-            "y": 0.352,
-            "face": 1,
-            "pet": "cat_tuxedo"
-          },
-          {
-            "kind": "cat",
-            "x": 0.131,
-            "y": 0.514,
-            "face": 1,
-            "pet": "cat_tabby"
-          },
-          {
-            "kind": "cat",
-            "x": 0.171,
-            "y": 0.577,
-            "face": 1
-          },
-          {
-            "kind": "cat",
-            "x": 0.117,
-            "y": 0.658,
-            "face": 1
-          },
-          {
-            "kind": "dog",
-            "x": 0.833,
-            "y": 0.878,
-            "face": -1
-          },
-          {
-            "kind": "dog",
-            "x": 0.921,
-            "y": 0.878,
-            "face": -1
-          }
-        ]
-      }
-    }
-  },
-  "backgroundPortrait": {
-    "src": "bg/room-portrait-v1.webp",
-    "layout": {
-      "tank": {
-        "x0": 0.02,
-        "y0": 0.06,
-        "x1": 0.985,
-        "y1": 0.783,
-        "r": 0.045
-      },
-      "swim": {
-        "x0": 0.05,
-        "y0": 0.12,
-        "x1": 0.955,
-        "y1": 0.7
-      },
-      "floorY": 0.797,
-      "floorX": [
-        0.25,
-        0.97
-      ],
-      "focusX": 0.45,
-      "pets": {
-        "catSize": 0.17,
-        "dogSize": 0.19,
-        "spots": [
-          {
-            "kind": "cat",
-            "x": 0.12,
-            "y": 0.703,
-            "face": 1,
-            "pet": "cat_tuxedo"
-          },
-          {
-            "kind": "cat",
-            "x": 0.08,
-            "y": 0.789,
-            "face": 1
-          },
-          {
-            "kind": "cat",
-            "x": 0.178,
-            "y": 0.814,
-            "face": 1,
-            "pet": "cat_tabby"
-          },
-          {
-            "kind": "dog",
-            "x": 0.73,
-            "y": 0.797,
-            "face": -1
-          },
-          {
-            "kind": "dog",
-            "x": 0.87,
-            "y": 0.797,
-            "face": -1
-          }
-        ]
-      }
-    }
-  },
   "sand": null,
-  "effects": {
-    "plants": false,
-    "lightRays": false
-  },
   "fish": {
     "star_blue": {
       "src": "jelly/star_blue-v1.webp",
@@ -321,5 +187,443 @@
   "decor": {},
   "ui": {
     "heartBubble": "pets/heart-bubble-v1.png"
+  },
+  "themes": {
+    "room": {
+      "name": "原木房間",
+      "thumb": "bg/room-thumb-v1.webp",
+      "background": {
+        "src": "bg/room-landscape-v1.webp",
+        "layout": {
+          "tank": {
+            "x0": 0.222,
+            "y0": 0.095,
+            "x1": 0.962,
+            "y1": 0.705,
+            "r": 0.02
+          },
+          "swim": {
+            "x0": 0.25,
+            "y0": 0.15,
+            "x1": 0.935,
+            "y1": 0.62
+          },
+          "floorY": 0.855,
+          "floorX": [
+            0.04,
+            0.97
+          ],
+          "focusX": 0.5,
+          "pets": {
+            "catSize": 0.085,
+            "dogSize": 0.1,
+            "spots": [
+              {
+                "kind": "cat",
+                "x": 0.144,
+                "y": 0.352,
+                "face": 1,
+                "pet": "cat_tuxedo"
+              },
+              {
+                "kind": "cat",
+                "x": 0.131,
+                "y": 0.514,
+                "face": 1,
+                "pet": "cat_tabby"
+              },
+              {
+                "kind": "cat",
+                "x": 0.171,
+                "y": 0.577,
+                "face": 1
+              },
+              {
+                "kind": "cat",
+                "x": 0.117,
+                "y": 0.658,
+                "face": 1
+              },
+              {
+                "kind": "dog",
+                "x": 0.833,
+                "y": 0.878,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.921,
+                "y": 0.878,
+                "face": -1
+              }
+            ]
+          }
+        }
+      },
+      "backgroundPortrait": {
+        "src": "bg/room-portrait-v1.webp",
+        "layout": {
+          "tank": {
+            "x0": 0.02,
+            "y0": 0.06,
+            "x1": 0.985,
+            "y1": 0.783,
+            "r": 0.045
+          },
+          "swim": {
+            "x0": 0.05,
+            "y0": 0.12,
+            "x1": 0.955,
+            "y1": 0.7
+          },
+          "floorY": 0.797,
+          "floorX": [
+            0.25,
+            0.97
+          ],
+          "focusX": 0.42,
+          "pets": {
+            "catSize": 0.17,
+            "dogSize": 0.19,
+            "spots": [
+              {
+                "kind": "cat",
+                "x": 0.12,
+                "y": 0.703,
+                "face": 1,
+                "pet": "cat_tuxedo"
+              },
+              {
+                "kind": "cat",
+                "x": 0.08,
+                "y": 0.789,
+                "face": 1
+              },
+              {
+                "kind": "cat",
+                "x": 0.178,
+                "y": 0.814,
+                "face": 1,
+                "pet": "cat_tabby"
+              },
+              {
+                "kind": "dog",
+                "x": 0.73,
+                "y": 0.797,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.87,
+                "y": 0.797,
+                "face": -1
+              }
+            ]
+          }
+        }
+      },
+      "effects": {
+        "plants": false,
+        "lightRays": false
+      }
+    },
+    "forest": {
+      "name": "森林精靈屋",
+      "thumb": "bg/forest-thumb-v1.webp",
+      "effects": {
+        "plants": false,
+        "lightRays": false
+      },
+      "background": {
+        "src": "bg/forest-landscape-v1.webp",
+        "layout": {
+          "tank": {
+            "x0": 0.222,
+            "y0": 0.095,
+            "x1": 0.962,
+            "y1": 0.705,
+            "r": 0.02
+          },
+          "swim": {
+            "x0": 0.25,
+            "y0": 0.15,
+            "x1": 0.935,
+            "y1": 0.62
+          },
+          "floorY": 0.87,
+          "floorX": [
+            0.04,
+            0.97
+          ],
+          "focusX": 0.5,
+          "pets": {
+            "catSize": 0.085,
+            "dogSize": 0.1,
+            "spots": [
+              {
+                "kind": "cat",
+                "x": 0.14,
+                "y": 0.326,
+                "face": 1,
+                "pet": "cat_tuxedo"
+              },
+              {
+                "kind": "cat",
+                "x": 0.11,
+                "y": 0.505,
+                "face": 1,
+                "pet": "cat_tabby"
+              },
+              {
+                "kind": "cat",
+                "x": 0.173,
+                "y": 0.568,
+                "face": 1
+              },
+              {
+                "kind": "cat",
+                "x": 0.116,
+                "y": 0.664,
+                "face": 1
+              },
+              {
+                "kind": "dog",
+                "x": 0.821,
+                "y": 0.845,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.92,
+                "y": 0.845,
+                "face": -1
+              }
+            ]
+          }
+        }
+      },
+      "backgroundPortrait": {
+        "src": "bg/forest-portrait-v1.webp",
+        "layout": {
+          "tank": {
+            "x0": 0.02,
+            "y0": 0.06,
+            "x1": 0.985,
+            "y1": 0.783,
+            "r": 0.045
+          },
+          "swim": {
+            "x0": 0.05,
+            "y0": 0.12,
+            "x1": 0.955,
+            "y1": 0.7
+          },
+          "floorY": 0.9,
+          "floorX": [
+            0.25,
+            0.97
+          ],
+          "focusX": 0.42,
+          "pets": {
+            "catSize": 0.17,
+            "dogSize": 0.19,
+            "spots": [
+              {
+                "kind": "cat",
+                "x": 0.095,
+                "y": 0.712,
+                "face": 1,
+                "pet": "cat_tuxedo"
+              },
+              {
+                "kind": "cat",
+                "x": 0.165,
+                "y": 0.81,
+                "face": 1,
+                "pet": "cat_tabby"
+              },
+              {
+                "kind": "dog",
+                "x": 0.712,
+                "y": 0.896,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.893,
+                "y": 0.896,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.55,
+                "y": 0.789,
+                "face": -1,
+                "fallback": true
+              },
+              {
+                "kind": "dog",
+                "x": 0.75,
+                "y": 0.789,
+                "face": -1,
+                "fallback": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "stellar": {
+      "name": "星空水晶館",
+      "thumb": "bg/stellar-thumb-v1.webp",
+      "effects": {
+        "plants": false,
+        "lightRays": false
+      },
+      "background": {
+        "src": "bg/stellar-landscape-v1.webp",
+        "layout": {
+          "tank": {
+            "x0": 0.222,
+            "y0": 0.095,
+            "x1": 0.962,
+            "y1": 0.705,
+            "r": 0.02
+          },
+          "swim": {
+            "x0": 0.25,
+            "y0": 0.15,
+            "x1": 0.935,
+            "y1": 0.62
+          },
+          "floorY": 0.87,
+          "floorX": [
+            0.04,
+            0.97
+          ],
+          "focusX": 0.5,
+          "pets": {
+            "catSize": 0.085,
+            "dogSize": 0.1,
+            "spots": [
+              {
+                "kind": "cat",
+                "x": 0.146,
+                "y": 0.333,
+                "face": 1,
+                "pet": "cat_tuxedo"
+              },
+              {
+                "kind": "cat",
+                "x": 0.122,
+                "y": 0.512,
+                "face": 1,
+                "pet": "cat_tabby"
+              },
+              {
+                "kind": "cat",
+                "x": 0.167,
+                "y": 0.567,
+                "face": 1
+              },
+              {
+                "kind": "cat",
+                "x": 0.115,
+                "y": 0.664,
+                "face": 1
+              },
+              {
+                "kind": "dog",
+                "x": 0.833,
+                "y": 0.842,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.926,
+                "y": 0.842,
+                "face": -1
+              }
+            ]
+          }
+        }
+      },
+      "backgroundPortrait": {
+        "src": "bg/stellar-portrait-v1.webp",
+        "layout": {
+          "tank": {
+            "x0": 0.02,
+            "y0": 0.06,
+            "x1": 0.985,
+            "y1": 0.783,
+            "r": 0.045
+          },
+          "swim": {
+            "x0": 0.05,
+            "y0": 0.12,
+            "x1": 0.955,
+            "y1": 0.7
+          },
+          "floorY": 0.9,
+          "floorX": [
+            0.25,
+            0.97
+          ],
+          "focusX": 0.42,
+          "pets": {
+            "catSize": 0.17,
+            "dogSize": 0.19,
+            "spots": [
+              {
+                "kind": "cat",
+                "x": 0.09,
+                "y": 0.711,
+                "face": 1,
+                "pet": "cat_tuxedo"
+              },
+              {
+                "kind": "cat",
+                "x": 0.08,
+                "y": 0.79,
+                "face": 1,
+                "pet": "cat_tabby"
+              },
+              {
+                "kind": "cat",
+                "x": 0.165,
+                "y": 0.819,
+                "face": 1
+              },
+              {
+                "kind": "dog",
+                "x": 0.733,
+                "y": 0.898,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.919,
+                "y": 0.898,
+                "face": -1
+              },
+              {
+                "kind": "dog",
+                "x": 0.55,
+                "y": 0.792,
+                "face": -1,
+                "fallback": true
+              },
+              {
+                "kind": "dog",
+                "x": 0.75,
+                "y": 0.792,
+                "face": -1,
+                "fallback": true
+              }
+            ]
+          }
+        }
+      }
+    }
   }
 }

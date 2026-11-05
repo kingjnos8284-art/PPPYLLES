@@ -45,6 +45,7 @@
  * @property {number} y
  * @property {number} face        在這個位置面向：1 = 右，-1 = 左
  * @property {string} [pet]       指定給某隻寵物的固定位置（例如 OREO 固定在貓跳台頂層）
+ * @property {boolean} [fallback] 備用位置：只有其他位置被選單擋住或超出畫面時才使用
  */
 
 /**
@@ -52,6 +53,13 @@
  * @property {number} catSize     貓的動畫格寬度（佔圖片寬度的比例）
  * @property {number} dogSize
  * @property {PetSpot[]} spots
+ */
+
+/**
+ * @typedef {Object} ThemeInfo
+ * @property {string} id
+ * @property {string} name
+ * @property {string} [thumb]
  */
 
 /**
@@ -65,6 +73,9 @@
 
 /**
  * @typedef {Object} AssetBank
+ * @property {string} theme                        目前主題 id
+ * @property {ThemeInfo[]} themes                   所有主題（名稱、縮圖）
+ * @property {(id: string) => Promise<boolean>} setTheme  切換主題（載入對應背景）
  * @property {SpriteEntry|null} background          橫向（電腦）背景
  * @property {SpriteEntry|null} backgroundPortrait  直向（手機）背景
  * @property {SpriteEntry|null} sand
@@ -122,8 +133,11 @@ async function loadGroup(group) {
   return out;
 }
 
-/** @returns {Promise<AssetBank>} */
-export async function loadAssets() {
+/**
+ * @param {string} [themeId] 一開始要使用的主題
+ * @returns {Promise<AssetBank>}
+ */
+export async function loadAssets(themeId) {
   /** @type {any} */
   let manifest = {};
   try {
@@ -138,9 +152,29 @@ export async function loadAssets() {
   const petThumbs = {};
   /** @type {HTMLImageElement|null} */
   let heartBubble = null;
-  const [background, backgroundPortrait, sand, decor] = await Promise.all([
-    loadEntry(manifest.background),
-    loadEntry(manifest.backgroundPortrait),
+  // 主題：每個主題有自己的橫／直背景與特效設定；舊格式（頂層 background）視為單一主題
+  /** @type {Record<string, any>} */
+  const themeDefs = manifest.themes ?? {
+    default: { name: '預設', background: manifest.background, backgroundPortrait: manifest.backgroundPortrait, effects: manifest.effects },
+  };
+  const themeIds = Object.keys(themeDefs);
+  const startTheme = themeId && themeDefs[themeId] ? themeId : themeIds[0];
+  /** @type {Record<string, { background: SpriteEntry|null, backgroundPortrait: SpriteEntry|null }>} */
+  const themeCache = {};
+  /** @param {string} id */
+  const loadTheme = async (id) => {
+    if (!themeCache[id]) {
+      const d = themeDefs[id];
+      const [bg, bgp] = await Promise.all([loadEntry(d.background), loadEntry(d.backgroundPortrait)]);
+      themeCache[id] = { background: bg, backgroundPortrait: bgp };
+    }
+    return themeCache[id];
+  };
+  /** @param {any} d */
+  const effectsOf = (d) => ({ plants: d?.effects?.plants !== false, lightRays: d?.effects?.lightRays !== false });
+
+  const [first, sand, decor] = await Promise.all([
+    loadTheme(startTheme),
     loadEntry(manifest.sand),
     loadGroup(manifest.decor),
     manifest.ui?.heartBubble ? loadImage('/assets/' + manifest.ui.heartBubble).then((i) => { heartBubble = i; }) : null,
@@ -155,10 +189,6 @@ export async function loadAssets() {
       if (img) thumbs[k] = img;
     }),
   ]);
-  const effects = {
-    plants: manifest.effects?.plants !== false,
-    lightRays: manifest.effects?.lightRays !== false,
-  };
   /** @type {Record<string, SpriteEntry>} */
   const fish = {};
   const pending = new Set();
@@ -188,10 +218,25 @@ export async function loadAssets() {
       pets[id] = { states, interact, facing: d.facing === -1 ? -1 : 1, anchorY: d.anchorY ?? 0.5 };
     });
   };
-  return {
-    background, backgroundPortrait, sand, fish, thumbs, requestFish,
-    pets, petThumbs, requestPet, heartBubble, decor, effects,
+  /** @type {AssetBank} */
+  const bank = {
+    theme: startTheme,
+    themes: themeIds.map((id) => ({ id, name: themeDefs[id].name ?? id, thumb: themeDefs[id].thumb })),
+    setTheme: async (id) => {
+      if (!themeDefs[id]) return false;
+      const t = await loadTheme(id);
+      bank.theme = id;
+      bank.background = t.background;
+      bank.backgroundPortrait = t.backgroundPortrait;
+      bank.effects = effectsOf(themeDefs[id]);
+      return true;
+    },
+    background: first.background, backgroundPortrait: first.backgroundPortrait,
+    effects: effectsOf(themeDefs[startTheme]),
+    sand, fish, thumbs, requestFish,
+    pets, petThumbs, requestPet, heartBubble, decor,
   };
+  return bank;
 }
 
 /**

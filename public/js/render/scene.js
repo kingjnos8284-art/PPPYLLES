@@ -57,6 +57,7 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {number} face
  * @property {number} size   動畫格寬度（px）
  * @property {string} [pet]   指定給哪隻寵物
+ * @property {boolean} [fallback]  備用位置
  */
 
 /** 各種姿勢出現的機率與持續時間（秒） */
@@ -122,6 +123,8 @@ export class Scene {
     this.petUnit = 1;
     /** @type {ScreenSpot[]} 陸地寵物在畫面上的固定位置 */
     this.spots = [];
+    /** @type {{left:number,right:number,top:number}|null} 底部選單的位置（寵物避開） */
+    this.dockRect = null;
 
     this.bg = document.createElement('canvas');
     this.time = 0;
@@ -137,6 +140,10 @@ export class Scene {
     this.canvas.width = Math.round(w * dpr);
     this.canvas.height = Math.round(h * dpr);
 
+    const dockEl = document.querySelector('.hud-dock');
+    const dr = dockEl?.getBoundingClientRect();
+    // 選單在畫面下半部時才需要避開（橫拿手機時選單在上方）
+    this.dockRect = dr && dr.top > h / 2 ? { left: dr.left, right: dr.right, top: dr.top } : null;
     const portrait = h > w;
     this.bgEntry = (portrait ? this.assets.backgroundPortrait : this.assets.background)
       ?? this.assets.background ?? this.assets.backgroundPortrait;
@@ -176,7 +183,7 @@ export class Scene {
       if (layout.pets) {
         const pl = layout.pets;
         this.spots = pl.spots.map((sp) => ({
-          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face, pet: sp.pet,
+          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face, pet: sp.pet, fallback: sp.fallback,
           size: (sp.kind === 'cat' ? pl.catSize : pl.dogSize) * dw,
         }));
       }
@@ -702,7 +709,22 @@ export class Scene {
    */
   spotFor(type, kind) {
     const fixed = this.spots.findIndex((s) => s.pet === type);
-    return fixed >= 0 ? fixed : this.freeSpot(kind, -1);
+    return fixed >= 0 && this.spotVisible(this.spots[fixed]) ? fixed : this.freeSpot(kind, -1);
+  }
+
+  /**
+   * 位置是否完整出現在畫面上，且沒有被底部選單擋住
+   * @param {ScreenSpot} s
+   */
+  spotVisible(s) {
+    if (s.x - s.size * 0.4 < 0 || s.x + s.size * 0.4 > this.w || s.y > this.h) return false;
+    const dock = this.dockRect;
+    if (dock) {
+      const overlapX = s.x + s.size * 0.35 > dock.left && s.x - s.size * 0.35 < dock.right;
+      // 腳底被選單擋住就不用（改用備用位置）
+      if (overlapX && s.y > dock.top - s.size * 0.02) return false;
+    }
+    return true;
   }
 
   /**
@@ -711,11 +733,12 @@ export class Scene {
    */
   freeSpot(kind, exclude) {
     const used = new Set([...this.pets.values()].flatMap((p) => [p.spot, p.moveTo]));
-    // 只用完整出現在畫面裡的位置（不同螢幕比例裁切範圍不同）
-    const visible = (/** @type {ScreenSpot} */ s) => s.x - s.size * 0.5 >= 0 && s.x + s.size * 0.5 <= this.w && s.y <= this.h;
+    // 只用完整出現在畫面裡、沒被選單擋住的位置；優先用一般位置，沒有才用備用位置
     const free = this.spots.map((s, i) => i)
-      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && !this.spots[i].pet && visible(this.spots[i]));
-    return free.length ? free[Math.floor(Math.random() * free.length)] : -1;
+      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && !this.spots[i].pet && this.spotVisible(this.spots[i]));
+    const main = free.filter((i) => !this.spots[i].fallback);
+    const pool = main.length ? main : free;
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : -1;
   }
 
   /** @param {string} [avoid] */
