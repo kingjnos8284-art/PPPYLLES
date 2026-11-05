@@ -5,6 +5,7 @@ import { createNewState } from './core/state.js';
 import { addFish, advance, settleOffline, tapLandPet } from './core/sim.js';
 import { backend } from './services/index.js';
 import { loadAssets } from './render/assets.js';
+import { applyViewport } from './render/viewport.js';
 import { Scene } from './render/scene.js';
 import { setThumbAssets } from './render/thumb.js';
 import { updateHud } from './ui/hud.js';
@@ -57,6 +58,8 @@ function catchUp(now, allowPopup) {
     openOffline(r);
   }
 }
+
+applyViewport();
 
 async function boot() {
   const [saved, now] = await Promise.all([backend.save.load(), backend.time.now()]);
@@ -168,7 +171,7 @@ function bindInput(canvas) {
   let resizeTimer;
   const onResize = () => {
     clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(() => scene.resize(), 120);
+    resizeTimer = window.setTimeout(() => { applyViewport(); scene.resize(); }, 120);
   };
   window.addEventListener('resize', onResize);
   window.visualViewport?.addEventListener('resize', onResize);

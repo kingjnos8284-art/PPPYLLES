@@ -3,6 +3,7 @@ import { getSpecies } from '../config/species.js';
 import { BALANCE } from '../config/balance.js';
 import { getLandPet } from '../config/landpets.js';
 import { drawSprite, drawCover } from './assets.js';
+import { viewportSize } from './viewport.js';
 import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder.js';
 
 /**
@@ -133,8 +134,7 @@ export class Scene {
 
   /** 視窗大小改變時重新排版 */
   resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const { w, h } = viewportSize();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.w = w; this.h = h; this.dpr = dpr;
     this.canvas.width = Math.round(w * dpr);

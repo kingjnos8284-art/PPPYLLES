@@ -34,6 +34,7 @@ html, body {
   width: 100%;
   height: 100%;
   height: 100dvh;
+  height: var(--app-h, 100dvh);
   overflow: hidden;
   background: #e9c999;
   color: var(--ink);
@@ -45,10 +46,11 @@ html, body {
 
 #stage {
   position: fixed;
-  inset: 0;
+  top: 0; left: 0;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
+  height: var(--app-h, 100dvh);
   display: block;
   touch-action: none;
 }
@@ -135,7 +137,7 @@ img { -webkit-user-drag: none; }
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--safe-bottom) + 8px);
+  bottom: calc(var(--safe-bottom) + 8px - var(--app-gap, 0px));
   display: flex;
   gap: 2px;
   z-index: 10;
@@ -166,7 +168,7 @@ img { -webkit-user-drag: none; }
 
 /* ============ 面板（手機底部抽屜／桌機置中視窗） ============ */
 .sheet-backdrop {
-  position: fixed; inset: 0;
+  position: fixed; inset: 0; bottom: calc(0px - var(--app-gap, 0px));
   background: rgba(60, 35, 15, .35);
   z-index: 20;
   animation: fade .2s ease;
@@ -174,7 +176,7 @@ img { -webkit-user-drag: none; }
 .sheet {
   position: fixed;
   z-index: 21;
-  left: 6px; right: 6px; bottom: calc(var(--safe-bottom) + 6px);
+  left: 6px; right: 6px; bottom: calc(var(--safe-bottom) + 6px - var(--app-gap, 0px));
   max-height: 82dvh;
   display: flex;
   flex-direction: column;
@@ -302,7 +304,7 @@ img { -webkit-user-drag: none; }
 
 /* ============ 啟動畫面 ============ */
 .boot {
-  position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; text-align: center;
+  position: fixed; inset: 0; bottom: calc(0px - var(--app-gap, 0px)); z-index: 50; display: grid; place-content: center; text-align: center;
   background: radial-gradient(ellipse at 50% 40%, #fff6e2, #f0d6a8 75%);
   transition: opacity .5s;
 }
@@ -334,7 +336,7 @@ img { -webkit-user-drag: none; }
   :root { --dock-h: 46px; }
   .dock-btn span:last-child { display: none; }
   /* 橫拿手機：選單維持在底部，改成精簡版（只有圖示）；寵物會自動避開選單 */
-  .hud-dock { bottom: calc(var(--safe-bottom) + 4px); }
+  .hud-dock { bottom: calc(var(--safe-bottom) + 4px - var(--app-gap, 0px)); }
   .dock-btn { width: 50px; }
   .dock-ico { width: 38px; height: 38px; margin: 0; }
 }
