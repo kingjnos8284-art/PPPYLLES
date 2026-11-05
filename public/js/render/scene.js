@@ -696,15 +696,17 @@ export class Scene {
 
   drawBubbles() {
     const { ctx } = this;
+    // 像素風泡泡：預先畫好的小圓圈點陣圖，放大後關閉平滑，位置對齊像素格
+    const P = Math.max(2, Math.round(2 * this.unit));
     ctx.save();
-    ctx.strokeStyle = 'rgba(220,250,255,.6)';
-    ctx.fillStyle = 'rgba(220,250,255,.12)';
-    ctx.lineWidth = 1;
+    ctx.imageSmoothingEnabled = false;
     for (const b of this.bubbles) {
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      const R = Math.max(3, Math.min(6, Math.round(b.r / P) + 2));
+      const img = pixelBubble(R);
+      const size = img.width * P;
+      const x = Math.round((b.x - size / 2) / P) * P;
+      const y = Math.round((b.y - size / 2) / P) * P;
+      ctx.drawImage(img, x, y, size, size);
     }
     ctx.restore();
   }
@@ -1054,6 +1056,37 @@ export class Scene {
     }
     return best ? { kind: 'fish', uid: best.uid } : null;
   }
+}
+
+/** @type {Map<number, HTMLCanvasElement>} */
+const bubbleCache = new Map();
+
+/**
+ * 像素泡泡點陣圖（半徑 R 個像素）：亮色外圈、淡淡的內部、左上角一點反光
+ * @param {number} R
+ */
+function pixelBubble(R) {
+  const hit = bubbleCache.get(R);
+  if (hit) return hit;
+  const n = R * 2 + 1;
+  const c = document.createElement('canvas');
+  c.width = n; c.height = n;
+  const g = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d'));
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const d = Math.hypot(x - R, y - R);
+      if (d > R + 0.3) continue;
+      g.fillStyle = d > R - 0.75 ? 'rgba(225,250,255,.9)' : 'rgba(190,240,255,.16)';
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+  // 反光
+  g.fillStyle = '#ffffff';
+  const hx = Math.round(R * 0.5), hy = Math.round(R * 0.5);
+  g.fillRect(hx, hy, 1, 1);
+  if (R >= 4) g.fillRect(hx + 1, hy, 1, 1), g.fillRect(hx, hy + 1, 1, 1);
+  bubbleCache.set(R, c);
+  return c;
 }
 
 /**
