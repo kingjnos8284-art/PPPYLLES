@@ -9,7 +9,7 @@
 export const TEST_MODE = {
   enabled: true,
   freeShop: false,
-  codexAll: true,
+  codexAll: false,
   tankCapacity: 30,
   tools: true,
 };

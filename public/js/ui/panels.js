@@ -63,15 +63,17 @@ export function openShop(tab) {
       list = el('div', { class: 'card-list' }, [
         full ? el('div', { class: 'notice' }, ['水族箱已經滿了。']) : null,
         ...[...SPECIES].sort((x, y) => x.price - y.price).map((sp) => {
-          // 太貴的魚種先以剪影顯示，累積到一定資源後揭曉，保留一點期待感
-          const unlocked = codexAll() || !!state.codex[sp.id] || sp.price <= Math.max(1500, state.totalEarned);
+          // 沒擁有過的種類先蓋黑、名稱 ？？？；目前珍珠夠買時才揭曉並開放購買
           const price = priceOf(sp.price);
-          const canBuy = !full && state.coins >= price;
+          const unlocked = codexAll() || !!state.codex[sp.id] || state.coins >= price;
+          const canBuy = unlocked && !full && state.coins >= price;
           return el('div', { class: 'card nine-card' }, [
             el('div', { class: 'card-thumb' }, [fishThumb(sp.id, 64, 64, { silhouette: !unlocked })]),
             el('div', {}, [
               el('div', { class: 'card-name' }, [unlocked ? sp.name : '？？？']),
-              el('div', { class: 'card-meta' }, [`成年每秒 +${fmtRate(sp.income)}・${fmtDuration(sp.adultMin * 60)}長大`]),
+              el('div', { class: 'card-meta' }, [unlocked
+                ? `成年每秒 +${fmtRate(sp.income)}・${fmtDuration(sp.adultMin * 60)}長大`
+                : '珍珠夠了就會揭曉'],),
             ]),
             el('button', {
               class: 'buy-btn nine-btn',
