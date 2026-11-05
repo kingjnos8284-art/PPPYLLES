@@ -231,7 +231,7 @@ export function openFishInfo(uid) {
     return el('div', {}, [
       el('div', { class: 'info-hero' }, [fishThumb(sp.id, 150, 150)]),
       el('div', { class: 'stat-rows' }, [
-        row('階段', BALANCE.stages[stageOf(f)].name),
+        row('階段', stageOf(f) === 'adult' ? '👑 成年' : BALANCE.stages[stageOf(f)].name),
         growthRow(f, sp),
         row('目前產出', `每秒 +${fmtRate(fishIncome(f, petBonus(state)))}`),
         row('已陪伴', fmtDuration(f.ageSec)),

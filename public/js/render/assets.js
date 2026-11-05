@@ -25,6 +25,7 @@
  * @property {number} fh   單格高
  * @property {BgLayout|null} layout  背景圖專用：水族箱與地板位置
  * @property {SpriteEntry|null} [hover]  停在原地時的動畫（選用，格式與主圖相同）
+ * @property {{x:number,y:number}[]} [tops]  每一格身體最上緣的位置（相對格子中心，以格寬為 1），用來放王冠
  */
 
 /**
@@ -197,7 +198,11 @@ export async function loadAssets(themeId) {
   const requestFish = (id) => {
     if (fish[id] || pending.has(id) || !fishDefs[id]) return;
     pending.add(id);
-    loadEntry(fishDefs[id]).then((e) => { if (e) fish[id] = e; });
+    loadEntry(fishDefs[id]).then((e) => {
+      if (!e) return;
+      try { e.tops = measureTops(e); } catch { /* 量不到就用預設位置 */ }
+      fish[id] = e;
+    });
   };
   /** @type {Record<string, PetSprites>} */
   const pets = {};
@@ -238,6 +243,38 @@ export async function loadAssets(themeId) {
     pets, petThumbs, requestPet, heartBubble, decor,
   };
   return bank;
+}
+
+/**
+ * 量出每一格身體最上緣的位置（水母傘頂），讓王冠可以戴在頭上並跟著上下漂浮
+ * @param {SpriteEntry} e
+ */
+function measureTops(e) {
+  const S = 96; // 縮小量測即可
+  const c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  const g = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d', { willReadFrequently: true }));
+  /** @type {{x:number,y:number}[]} */
+  const out = [];
+  for (let i = 0; i < e.frames; i++) {
+    g.clearRect(0, 0, S, S);
+    g.drawImage(e.img, (i % e.cols) * e.fw, Math.floor(i / e.cols) * e.fh, e.fw, e.fh, 0, 0, S, S);
+    const d = g.getImageData(0, 0, S, S).data;
+    let top = -1;
+    for (let y = 0; y < S && top < 0; y++) {
+      let n = 0;
+      for (let x = 0; x < S; x++) if (d[(y * S + x) * 4 + 3] > 80) n++;
+      if (n >= 2) top = y;
+    }
+    if (top < 0) { out.push({ x: 0, y: -0.38 }); continue; }
+    // 傘頂附近幾列的水平中心
+    let sx = 0, n = 0;
+    for (let y = top; y < Math.min(S, top + 6); y++) {
+      for (let x = 0; x < S; x++) if (d[(y * S + x) * 4 + 3] > 80) { sx += x; n++; }
+    }
+    out.push({ x: (n ? sx / n : S / 2) / S - 0.5, y: top / S - 0.5 });
+  }
+  return out;
 }
 
 /**

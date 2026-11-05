@@ -1,7 +1,7 @@
 // @ts-check
 import { getSpecies } from '../config/species.js';
 import { BALANCE } from '../config/balance.js';
-import { growthScale } from '../core/sim.js';
+import { growthScale, stageOf } from '../core/sim.js';
 import { getLandPet } from '../config/landpets.js';
 import { drawSprite, drawCover } from './assets.js';
 import { viewportSize } from './viewport.js';
@@ -31,6 +31,8 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {number} dying  -1 = 活著；否則為開始離去的時間
  * @property {string} species
  * @property {number} L
+ * @property {boolean} adult
+ * @property {number} crownAt   戴上王冠的時間（播放登場動畫用）；-1 表示還沒戴
  */
 
 /**
@@ -114,6 +116,8 @@ export class Scene {
     this.plants = [];
     /** @type {number|null} */
     this.selectedUid = null;
+    /** @type {((f: import('../core/state.js').FishData) => void)|null} 水母長大時呼叫 */
+    this.onGrownUp = null;
 
     /** @type {import('./assets.js').SpriteEntry|null} 目前使用的背景 */
     this.bgEntry = null;
@@ -429,12 +433,24 @@ export class Scene {
           born: this.time,
           dying: -1,
           L: 0,
+          adult: stageOf(d) === 'adult',
+          crownAt: stageOf(d) === 'adult' ? -10 : -1,
         };
         this.pickTarget(e);
         this.fish.set(d.uid, e);
       }
       e.L = getSpecies(d.species).size * this.unit * BALANCE.creatureScale * growthScale(d);
       this.assets.requestFish(d.species);
+      // 剛長大：戴上王冠，冒出閃光
+      if (!e.adult && stageOf(d) === 'adult') {
+        e.adult = true;
+        e.crownAt = this.time;
+        for (let i = 0; i < 10; i++) {
+          const a = (i / 10) * Math.PI * 2;
+          this.particles.push({ x: e.x, y: e.y - e.L * 0.3, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40 - 10, t: 0, kind: 'spark', color: '#ffd25e' });
+        }
+        this.onGrownUp?.(d);
+      }
     }
     for (const e of this.fish.values()) {
       if (!seen.has(e.uid) && e.dying < 0) e.dying = this.time;
@@ -757,6 +773,27 @@ export class Scene {
     } else {
       drawFishPlaceholder(ctx, sp, L, t + f.phase);
     }
+
+    // 成年的王冠：戴在傘頂，跟著動畫上下漂浮
+    if (f.adult && f.dying < 0) {
+      let ax = 0, ay = -0.38;
+      if (sprite?.tops?.length) {
+        const fr = Math.floor(Math.max(0, t + f.phase) * sprite.fps) % sprite.frames;
+        ({ x: ax, y: ay } = sprite.tops[fr]);
+      }
+      const cw = Math.max(16, L * 0.36);
+      const since = t - f.crownAt;
+      // 剛戴上時從上方落下、彈一下
+      const pop = since < 0.7 ? 1 + Math.sin(Math.min(1, since / 0.7) * Math.PI) * 0.35 : 1;
+      const drop = since < 0.4 ? (1 - since / 0.4) * L * 0.4 : 0;
+      ctx.save();
+      // 底邊稍微壓進傘頂，看起來是戴在頭上
+      ctx.translate(ax * L, ay * L + cw * 0.18 - drop);
+      ctx.rotate(Math.sin(t * 1.3 + f.phase) * 0.06);
+      ctx.scale(pop, pop);
+      drawCrown(ctx, cw, t + f.phase);
+      ctx.restore();
+    }
     ctx.restore();
   }
 
@@ -1017,6 +1054,77 @@ export class Scene {
     }
     return best ? { kind: 'fish', uid: best.uid } : null;
   }
+}
+
+/**
+ * 王冠（金色、三個尖角、寶石，帶光暈與閃光），以底邊中心為原點
+ * @param {CanvasRenderingContext2D} ctx @param {number} w 寬度 @param {number} t 時間
+ */
+function drawCrown(ctx, w, t) {
+  const h = w * 0.62;
+  ctx.save();
+  // 光暈
+  const glow = ctx.createRadialGradient(0, -h * 0.4, 0, 0, -h * 0.4, w * 0.9);
+  glow.addColorStop(0, 'rgba(255,220,120,.45)');
+  glow.addColorStop(1, 'rgba(255,220,120,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(0, -h * 0.4, w * 0.9, 0, Math.PI * 2); ctx.fill();
+
+  // 冠身
+  const x0 = -w / 2, x1 = w / 2;
+  ctx.beginPath();
+  ctx.moveTo(x0, 0);
+  ctx.lineTo(x0, -h * 0.55);
+  ctx.lineTo(x0 + w * 0.22, -h * 0.22);
+  ctx.lineTo(0, -h);
+  ctx.lineTo(x1 - w * 0.22, -h * 0.22);
+  ctx.lineTo(x1, -h * 0.55);
+  ctx.lineTo(x1, 0);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, -h, 0, 0);
+  g.addColorStop(0, '#fff3b0');
+  g.addColorStop(0.45, '#ffcf3f');
+  g.addColorStop(1, '#d9901a');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(1.2, w * 0.07);
+  ctx.strokeStyle = '#8a4f0c';
+  ctx.stroke();
+
+  // 底部飾帶
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  ctx.fillRect(x0 + w * 0.06, -h * 0.2, w * 0.88, h * 0.07);
+
+  // 尖角上的小珠子
+  ctx.fillStyle = '#fff6cf';
+  for (const [px, py] of [[x0, -h * 0.55], [0, -h], [x1, -h * 0.55]]) {
+    ctx.beginPath(); ctx.arc(px, py, w * 0.075, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#8a4f0c'; ctx.lineWidth = Math.max(1, w * 0.035); ctx.stroke();
+  }
+  // 寶石
+  const gem = (/** @type {number} */ x, /** @type {string} */ c, /** @type {number} */ r) => {
+    ctx.beginPath(); ctx.arc(x, -h * 0.36, r, 0, Math.PI * 2);
+    ctx.fillStyle = c; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.beginPath(); ctx.arc(x - r * 0.3, -h * 0.36 - r * 0.3, r * 0.35, 0, Math.PI * 2); ctx.fill();
+  };
+  gem(-w * 0.27, '#4fb7ff', w * 0.07);
+  gem(0, '#ff4f78', w * 0.1);
+  gem(w * 0.27, '#4fb7ff', w * 0.07);
+
+  // 閃光（每隔一段時間一閃）
+  const k = (t * 0.45) % 1;
+  if (k < 0.18) {
+    const a = Math.sin((k / 0.18) * Math.PI);
+    const sx = -w * 0.32 + (k / 0.18) * w * 0.64, sy = -h * 0.62;
+    ctx.globalAlpha *= a;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = Math.max(1, w * 0.04);
+    const r = w * 0.18;
+    ctx.beginPath(); ctx.moveTo(sx - r, sy); ctx.lineTo(sx + r, sy); ctx.moveTo(sx, sy - r); ctx.lineTo(sx, sy + r); ctx.stroke();
+  }
+  ctx.restore();
 }
 
 /** @type {WeakMap<HTMLImageElement, number[]>} */

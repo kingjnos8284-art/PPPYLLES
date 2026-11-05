@@ -1,5 +1,6 @@
 // @ts-check
 import { BALANCE } from './config/balance.js';
+import { getSpecies } from './config/species.js';
 import { getLandPet } from './config/landpets.js';
 import { createNewState } from './core/state.js';
 import { addFish, advance, settleOffline, tapLandPet } from './core/sim.js';
@@ -70,6 +71,7 @@ async function boot() {
 
   const canvas = /** @type {HTMLCanvasElement} */ ($('stage'));
   scene = new Scene(canvas, () => state, assets);
+  scene.onGrownUp = (f) => toast(`${getSpecies(f.species).name} 長大了！戴上了王冠 👑`);
 
   initPanels({
     getState: () => state,
