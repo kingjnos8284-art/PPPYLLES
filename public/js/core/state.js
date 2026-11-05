@@ -85,6 +85,8 @@ export function migrate(raw) {
   raw.account ??= { userId: null };
   // 原木房間已移除：舊存檔改用森林精靈屋
   if (!raw.theme || raw.theme === 'room') raw.theme = 'forest';
+  // 星空水晶館改為要購買的裝飾：之前已經在用的玩家直接保留
+  if (raw.theme === 'stellar' && !raw.decor.owned.includes('bg:stellar')) raw.decor.owned.push('bg:stellar');
   raw.memorial ??= [];
 
   // v1 → v2：生物名單改為水母為主。已移除的種類換成星光水母（保留品質與年齡），圖鑑只留現有種類

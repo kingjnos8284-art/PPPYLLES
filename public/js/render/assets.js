@@ -62,6 +62,7 @@
  * @property {string} id
  * @property {string} name
  * @property {string} [thumb]
+ * @property {number} price   解鎖價格（0 = 免費）
  */
 
 /**
@@ -230,7 +231,7 @@ export async function loadAssets(themeId) {
   /** @type {AssetBank} */
   const bank = {
     theme: startTheme,
-    themes: themeIds.map((id) => ({ id, name: themeDefs[id].name ?? id, thumb: themeDefs[id].thumb })),
+    themes: themeIds.map((id) => ({ id, name: themeDefs[id].name ?? id, thumb: themeDefs[id].thumb, price: themeDefs[id].price ?? 0 })),
     setTheme: async (id) => {
       if (!themeDefs[id]) return false;
       const t = await loadTheme(id);

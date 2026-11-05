@@ -330,7 +330,8 @@
           },
           "fitWidth": true
         }
-      }
+      },
+      "price": 0
     },
     "stellar": {
       "name": "星空水晶館",
@@ -469,7 +470,8 @@
           },
           "fitWidth": true
         }
-      }
+      },
+      "price": 500000
     }
   }
 }

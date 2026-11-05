@@ -2,8 +2,7 @@
 import { SPECIES, getSpecies } from '../config/species.js';
 import { LAND_PETS, getLandPet } from '../config/landpets.js';
 import { BALANCE, TEST_MODE, tankCapacity, priceOf } from '../config/balance.js';
-import { DECOR_ENABLED } from '../config/decor.js';
-import { buyFish, buyLandPet, releaseFish, codexProgress, fishIncome, petBonus, stageOf, growthProgress } from '../core/sim.js';
+import { buyFish, buyLandPet, buyTheme, ownsTheme, releaseFish, codexProgress, fishIncome, petBonus, stageOf, growthProgress } from '../core/sim.js';
 import { fishThumb, petThumb } from '../render/thumb.js';
 import { el, fmt, fmtRate, fmtDuration, coinIcon } from './dom.js';
 import { openSheet, replaceSheetContent, closeSheet, currentSheet } from './sheet.js';
@@ -116,7 +115,7 @@ export function openShop(tab) {
         ]);
       }));
     } else {
-      list = decorNotice();
+      list = decorList(() => replaceSheetContent(render()));
     }
     return el('div', {}, [tabs, list]);
   };
@@ -143,10 +142,55 @@ function priceLabel(price) {
   return priceOf(price) === 0 && price > 0 ? `免費` : fmt(price);
 }
 
-function decorNotice() {
-  return el('div', { class: 'notice' }, [
-    DECOR_ENABLED ? '' : '裝飾功能即將推出', el('br'),
-    '之後可以在水族箱擺放水草、岩石與各種擺飾，部分裝飾還會提升產出。',
+/**
+ * 裝飾：目前是房間背景。免費或已解鎖的可以直接使用，其他要花珍珠解鎖。
+ * @param {() => void} refresh
+ */
+function decorList(refresh) {
+  const state = G.getState();
+  return el('div', {}, [
+    el('div', { class: 'codex-summary' }, ['房間背景']),
+    el('div', { class: 'card-list' }, G.themes().map((t) => {
+      const owned = ownsTheme(state, t.id, t.price);
+      const using = state.theme === t.id;
+      /** @type {Node} */
+      let action;
+      if (using) {
+        action = el('button', { class: 'buy-btn nine-btn2', disabled: true }, ['使用中']);
+      } else if (owned) {
+        action = el('button', {
+          class: 'buy-btn nine-btn',
+          onclick: async (/** @type {MouseEvent} */ e) => {
+            /** @type {HTMLButtonElement} */ (e.currentTarget).disabled = true;
+            await G.setTheme(t.id);
+            toast(`房間換成了「${t.name}」`);
+            refresh();
+          },
+        }, ['使用']);
+      } else {
+        action = el('button', {
+          class: 'buy-btn nine-btn',
+          disabled: state.coins < priceOf(t.price) || undefined,
+          onclick: async () => {
+            const r = buyTheme(G.getState(), t.id, t.price);
+            if (!r.ok) { toast(r.reason ?? ''); return; }
+            G.commit();
+            await G.setTheme(t.id);
+            toast(`解鎖了「${t.name}」！`);
+            refresh();
+          },
+        }, [coinIcon(), priceLabel(t.price)]);
+      }
+      return el('div', { class: 'card nine-card decor-card' }, [
+        t.thumb ? el('img', { class: 'decor-thumb', src: '/assets/' + t.thumb, alt: '', draggable: 'false' }) : el('div'),
+        el('div', {}, [
+          el('div', { class: 'card-name' }, [t.name]),
+          el('div', { class: 'card-meta' }, [owned ? '已擁有' : '解鎖後可隨時切換']),
+        ]),
+        action,
+      ]);
+    })),
+    el('div', { class: 'notice' }, ['更多裝飾即將推出。']),
   ]);
 }
 
@@ -311,7 +355,9 @@ export function openOffline(r) {
 
 export function openDecor() {
   stopLive();
-  openSheet('decor', '裝飾', decorNotice());
+  const render = () => decorList(() => replaceSheetContent(render()));
+  openSheet('decor', '裝飾', render(), { onClose: stopLive });
+  live(render);
 }
 
 // ================= 設定 =================
@@ -322,7 +368,6 @@ export function openSettings(opts) {
   const state = G.getState();
   openSheet('settings', '設定', el('div', {}, [
     el('div', { class: 'about-title' }, ['PPPYLLES']),
-    themePicker(),
     TEST_MODE.enabled && TEST_MODE.tools ? testTools() : null,
     el('div', { class: 'stat-rows' }, [
       row('累計獲得資源', fmt(state.totalEarned)),
@@ -349,29 +394,6 @@ export function openSettings(opts) {
       },
     }, ['重新開始遊戲']),
   ]));
-}
-
-/** 房間主題選擇 */
-function themePicker() {
-  const current = G.getState().theme;
-  return el('div', { class: 'theme-picker' }, [
-    el('div', { class: 'test-title' }, ['房間主題']),
-    el('div', { class: 'theme-grid', style: { gridTemplateColumns: `repeat(${Math.min(3, G.themes().length)}, 1fr)` } }, G.themes().map((t) => el('button', {
-      class: 'theme-card nine-card' + (t.id === current ? ' is-active' : ''),
-      onclick: async (/** @type {MouseEvent} */ e) => {
-        if (t.id === G.getState().theme) return;
-        const btn = /** @type {HTMLButtonElement} */ (e.currentTarget);
-        btn.classList.add('is-loading');
-        await G.setTheme(t.id);
-        document.querySelectorAll('.theme-card').forEach((n) => n.classList.remove('is-active', 'is-loading'));
-        btn.classList.add('is-active');
-        toast(`房間換成了「${t.name}」`);
-      },
-    }, [
-      t.thumb ? el('img', { class: 'theme-thumb', src: '/assets/' + t.thumb, alt: '', draggable: 'false' }) : null,
-      el('div', { class: 'theme-name' }, [t.name]),
-    ]))),
-  ]);
 }
 
 /** 測試工具（只在測試模式出現） */

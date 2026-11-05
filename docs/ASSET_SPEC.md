@@ -15,14 +15,14 @@
 
 ## 0. 房間主題
 
-目前有兩套主題，玩家可在「設定 → 房間主題」切換，選擇會存在存檔中：
+目前有兩套主題，放在「裝飾 → 房間背景」：森林精靈屋免費，星空水晶館要花 500,000 珍珠解鎖，解鎖後可隨時切換。目前使用中的背景與已解鎖的背景都會存在存檔裡（`decor.owned` 裡的 `bg:<id>`）：
 
-| id | 名稱 | 檔案 |
-|---|---|---|
-| `forest` | 森林精靈屋 | `bg/forest-landscape-v1.webp`、`bg/forest-portrait-v1.webp` |
-| `stellar` | 星空水晶館 | `bg/stellar-landscape-v1.webp`、`bg/stellar-portrait-v1.webp` |
+| id | 名稱 | 價格 | 檔案 |
+|---|---|---:|---|
+| `forest` | 森林精靈屋 | 免費 | `bg/forest-landscape-v1.webp`、`bg/forest-portrait-v1.webp` |
+| `stellar` | 星空水晶館 | 500,000 | `bg/stellar-landscape-v1.webp`、`bg/stellar-portrait-v1.webp` |
 
-主題設定在 `public/assets/manifest.json` 的 `themes`，每個主題有橫／直背景、`layout`（水族箱水域、游動範圍、寵物位置）與縮圖。
+主題設定在 `public/assets/manifest.json` 的 `themes`，每個主題有價格（`price`）、橫／直背景、`layout`（水族箱水域、游動範圍、寵物位置）與縮圖。
 寵物位置可指定給特定寵物（`pet`），或標成備用位置（`fallback`）：當一般位置超出畫面或被底部選單擋住時才使用。
 新增主題：沿用相同構圖（左側貓跳台、中央水族箱、右下兩張狗床），交給 Claude 量測位置即可。
 

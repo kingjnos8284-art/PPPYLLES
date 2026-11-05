@@ -138,6 +138,28 @@ export function releaseFish(state, uid) {
 }
 
 /**
+ * 解鎖背景（裝飾）。已解鎖的背景記在 state.decor.owned（格式 'bg:<id>'）
+ * @param {GameState} state
+ * @param {string} themeId
+ * @param {number} basePrice
+ * @returns {{ ok: boolean, reason?: string }}
+ */
+export function buyTheme(state, themeId, basePrice) {
+  const key = 'bg:' + themeId;
+  if (basePrice <= 0 || state.decor.owned.includes(key)) return { ok: true };
+  const price = priceOf(basePrice);
+  if (state.coins < price) return { ok: false, reason: '資源不足' };
+  state.coins -= price;
+  state.decor.owned.push(key);
+  return { ok: true };
+}
+
+/** @param {GameState} state @param {string} themeId @param {number} basePrice */
+export function ownsTheme(state, themeId, basePrice) {
+  return basePrice <= 0 || state.decor.owned.includes('bg:' + themeId);
+}
+
+/**
  * 購買陸地寵物
  * @param {GameState} state
  * @param {string} petId

@@ -80,6 +80,8 @@ async function boot() {
     resetGame: async () => {
       await backend.save.clear();
       state = newGame(Date.now());
+      // 重新開始時背景也回到預設
+      if (assets.theme !== state.theme) { await assets.setTheme(state.theme); scene.resize(); }
       commit();
     },
     themes: () => assets.themes,

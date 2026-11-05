@@ -362,3 +362,7 @@ img { -webkit-user-drag: none; }
 .growth .bar { width: min(140px, 40vw); height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .15); overflow: hidden; }
 .growth .bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #9fe8ff, #ffffff); }
 .growth-left { font-size: 12px; color: var(--ink-soft); font-weight: 500; white-space: nowrap; }
+
+/* 裝飾：背景卡片 */
+.decor-card { grid-template-columns: 96px 1fr auto; }
+.decor-thumb { width: 96px; aspect-ratio: 320 / 173; object-fit: cover; border-radius: 10px; display: block; }
