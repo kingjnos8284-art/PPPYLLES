@@ -748,16 +748,7 @@ export class Scene {
     // 動畫圖四周有留白，選取框以實際身體大小計算
     const AL = sprite ? L * 0.62 : L;
 
-    // 選取框
-    if (this.selectedUid === f.uid) {
-      ctx.beginPath();
-      ctx.arc(0, 0, Math.max(AL * 0.65, 18), 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,.7)';
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
+    void AL;
 
     if (sp.shape !== 'jelly') {
       const tilt = Math.atan2(f.vy, Math.abs(f.vx) + 20) * 0.6;
@@ -774,13 +765,16 @@ export class Scene {
       drawFishPlaceholder(ctx, sp, L, t + f.phase);
     }
 
-    // 成年的王冠：戴在傘頂，跟著動畫上下漂浮
+    // 傘頂位置（每一格動畫自動量測）
+    let ax = 0, ay = -0.38;
+    if (sprite?.tops?.length) {
+      const fr = Math.floor(Math.max(0, t + f.phase) * sprite.fps) % sprite.frames;
+      ({ x: ax, y: ay } = sprite.tops[fr]);
+    }
+    let topY = ay * L; // 頭頂（有王冠時為王冠頂端），選取箭頭畫在這上面
+
+    // 成年的王冠：浮在傘頂上方，跟著動畫上下漂浮
     if (f.adult && f.dying < 0) {
-      let ax = 0, ay = -0.38;
-      if (sprite?.tops?.length) {
-        const fr = Math.floor(Math.max(0, t + f.phase) * sprite.fps) % sprite.frames;
-        ({ x: ax, y: ay } = sprite.tops[fr]);
-      }
       const crown = this.assets.crown;
       const cb = this.assets.crownBounds;
       // 像素王冠：每一格放大成整數個螢幕像素，保持銳利
@@ -799,6 +793,7 @@ export class Scene {
         const base = f.y + ay * L - gap;
         if (base < minBase) gap -= minBase - base;
       }
+      topY = ay * L - gap - crownH * pop;
       ctx.save();
       ctx.translate(ax * L, ay * L - gap - drop);
       ctx.scale(pop, pop);
@@ -813,6 +808,18 @@ export class Scene {
       } else {
         drawCrown(ctx, cw, t + f.phase);
       }
+      ctx.restore();
+    }
+
+    // 選取中：頭頂上方的紅色像素小箭頭，上下跳動
+    if (this.selectedUid === f.uid && f.dying < 0) {
+      const img = selectArrow();
+      const px = Math.max(3, Math.round(L / 34));
+      const bob = Math.abs(Math.sin(t * 4)) * px * 2.5;
+      const w = img.width * px, h = img.height * px;
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, ax * L - w / 2, topY - h - px * 2 - bob, w, h);
       ctx.restore();
     }
     ctx.restore();
@@ -1083,6 +1090,33 @@ export class Scene {
  */
 function isInside(row, x) {
   return row.lastIndexOf('o', x) >= 0 && row.indexOf('o', x) >= 0;
+}
+
+/** @type {HTMLCanvasElement|null} */
+let arrowCache = null;
+
+/** 選取用的紅色像素箭頭（朝下） */
+function selectArrow() {
+  if (arrowCache) return arrowCache;
+  const rows = [
+    '..KKK..',
+    '..KRK..',
+    'KKKRKKK',
+    'KRRLRRK',
+    '.KRRRK.',
+    '..KRK..',
+    '...K...',
+  ];
+  /** @type {Record<string, string>} */
+  const pal = { K: '#6e0f1c', R: '#ff3b4e', L: '#ff8a96' };
+  const c = document.createElement('canvas');
+  c.width = rows[0].length; c.height = rows.length;
+  const g = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d'));
+  rows.forEach((r, y) => [...r].forEach((ch, x) => {
+    if (pal[ch]) { g.fillStyle = pal[ch]; g.fillRect(x, y, 1, 1); }
+  }));
+  arrowCache = c;
+  return c;
 }
 
 /** 泡泡大小：大多是小泡泡，偶爾一顆大泡泡 */
