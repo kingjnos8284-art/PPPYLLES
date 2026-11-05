@@ -14,6 +14,7 @@
  * @property {string} id
  * @property {'cat'|'dog'} kind
  * @property {string} name
+ * @property {string} breed      品種（顯示在名字下方）
  * @property {string} desc
  * @property {number} price
  * @property {number} bonus
@@ -27,12 +28,12 @@
 /** @type {LandPetType[]} */
 export const LAND_PETS = [
   {
-    id: 'cat_tuxedo', kind: 'cat', name: '賓士貓',
+    id: 'cat_tuxedo', kind: 'cat', name: 'OREO', breed: '賓士貓',
     desc: '金色眼睛的賓士貓，最喜歡窩在貓跳台上看水母漂來漂去。',
     price: 0, bonus: 0.03, tapReward: 20, size: 70, speed: 12, shape: 'capybara', color: '#2b2b33',
   },
   {
-    id: 'dog_dachshund', kind: 'dog', name: '長毛臘腸',
+    id: 'dog_dachshund', kind: 'dog', name: 'NANA', breed: '長毛臘腸',
     desc: '黑卡其色的長毛臘腸狗，總是守在狗窩前，摸摸頭就會開心搖尾巴。',
     price: 1500, bonus: 0.06, tapReward: 30, size: 80, speed: 10, shape: 'capybara', color: '#3a2a1e',
   },

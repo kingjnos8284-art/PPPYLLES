@@ -97,7 +97,7 @@ export function openShop(tab) {
           el('div', {}, [
             el('div', { class: 'card-name' }, [p.name]),
             el('div', { class: 'card-meta' }, [
-              `全體產出 +${Math.round(p.bonus * 100)}%・永遠陪伴`,
+              `${p.breed}・全體產出 +${Math.round(p.bonus * 100)}%`,
               owned ? el('br') : null,
               owned ? `已互動 ${owned.affection} 次` : null,
             ]),
