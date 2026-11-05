@@ -575,11 +575,11 @@ export class Scene {
       p.hop = Math.max(0, p.hop - dt * 2.5);
     }
 
-    // 氣泡
-    if (Math.random() < dt * (1.5 + (this.swim.right - this.swim.left) / 700)) {
-      const emit = [0.12, 0.47, 0.83][Math.floor(Math.random() * 3)];
+    // 氣泡：從 8 個點冒出，整體生成量偏少，每個點稀稀落落地冒
+    if (Math.random() < dt * (0.75 + (this.swim.right - this.swim.left) / 1400)) {
+      const emit = BUBBLE_POINTS[Math.floor(Math.random() * BUBBLE_POINTS.length)];
       this.bubbles.push({
-        x: this.swim.left + (this.swim.right - this.swim.left) * emit + (Math.random() - 0.5) * 30,
+        x: this.swim.left + (this.swim.right - this.swim.left) * emit + (Math.random() - 0.5) * 14,
         y: this.sandTop + 4,
         r: bubbleSize(),
         v: 30 + Math.random() * 40,
@@ -1121,6 +1121,9 @@ function selectArrow() {
   arrowCache = c;
   return c;
 }
+
+/** 泡泡冒出的位置（水族箱游動範圍的寬度比例，間距故意不完全平均） */
+const BUBBLE_POINTS = [0.05, 0.17, 0.29, 0.42, 0.54, 0.66, 0.8, 0.93];
 
 /** 泡泡大小：大多是小泡泡，偶爾一顆大泡泡 */
 function bubbleSize() {
