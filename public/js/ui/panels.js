@@ -384,16 +384,37 @@ export function openSettings(opts) {
         '手機上想要完全滿版：在瀏覽器選單選擇「加入主畫面」，從主畫面打開就不會有網址列。',
       ])
       : null,
-    el('button', {
-      class: 'danger-btn nine-btn2',
-      onclick: async () => {
-        if (!confirm('確定要清除所有進度、重新開始嗎？此動作無法復原。')) return;
-        await G.resetGame();
-        closeSheet();
-        toast('已重新開始');
-      },
-    }, ['重新開始遊戲']),
+    resetBlock(),
   ]));
+}
+
+/**
+ * 重新開始：在面板內兩段式確認。
+ * 不使用瀏覽器的 confirm()：加入主畫面的網頁 App 裡它常常不會跳出、直接當成取消。
+ */
+function resetBlock() {
+  const box = el('div', { class: 'reset-block' }, []);
+  const ask = () => {
+    box.replaceChildren(el('button', { class: 'danger-btn nine-btn2', onclick: confirmStep }, ['重新開始遊戲']));
+  };
+  const confirmStep = () => {
+    box.replaceChildren(el('div', { class: 'release-confirm' }, [
+      el('div', { class: 'muted' }, ['確定要清除所有進度、重新開始嗎？此動作無法復原。']),
+      el('div', { class: 'release-row' }, [
+        el('button', { class: 'ghost-btn nine-btn2', onclick: ask }, ['再想想']),
+        el('button', {
+          class: 'danger-btn nine-btn2',
+          onclick: async () => {
+            await G.resetGame();
+            closeSheet();
+            toast('已重新開始');
+          },
+        }, ['確定重新開始']),
+      ]),
+    ]));
+  };
+  ask();
+  return box;
 }
 
 /** 測試工具（只在測試模式出現） */
