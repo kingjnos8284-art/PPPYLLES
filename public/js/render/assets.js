@@ -89,6 +89,8 @@
  * @property {Record<string, HTMLImageElement>} petThumbs  陸地寵物小圖
  * @property {(id: string) => void} requestPet      要求載入某隻陸地寵物的動畫
  * @property {HTMLImageElement|null} heartBubble    互動時的愛心對話框
+ * @property {SpriteEntry|null} crown               成年水母的王冠動畫
+ * @property {{x:number,y:number,w:number,h:number}|null} crownBounds  王冠在格子裡的實際範圍（像素）
  * @property {Record<string, SpriteEntry>} decor
  */
 
@@ -175,10 +177,11 @@ export async function loadAssets(themeId) {
   /** @param {any} d */
   const effectsOf = (d) => ({ plants: d?.effects?.plants !== false, lightRays: d?.effects?.lightRays !== false });
 
-  const [first, sand, decor] = await Promise.all([
+  const [first, sand, decor, crown] = await Promise.all([
     loadTheme(startTheme),
     loadEntry(manifest.sand),
     loadGroup(manifest.decor),
+    loadEntry(manifest.ui?.crown),
     manifest.ui?.heartBubble ? loadImage('/assets/' + manifest.ui.heartBubble).then((i) => { heartBubble = i; }) : null,
     ...Object.entries(petDefs).map(async ([k, v]) => {
       if (!v || typeof v.thumb !== 'string') return;
@@ -241,6 +244,7 @@ export async function loadAssets(themeId) {
     effects: effectsOf(themeDefs[startTheme]),
     sand, fish, thumbs, requestFish,
     pets, petThumbs, requestPet, heartBubble, decor,
+    crown, crownBounds: manifest.ui?.crown?.bounds ?? null,
   };
   return bank;
 }

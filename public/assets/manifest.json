@@ -186,7 +186,20 @@
   },
   "decor": {},
   "ui": {
-    "heartBubble": "pets/heart-bubble-v1.png"
+    "heartBubble": "pets/heart-bubble-v1.png",
+    "crown": {
+      "src": "ui/crown-sparkle-v1.webp",
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "bounds": {
+        "x": 52,
+        "y": 89,
+        "w": 280,
+        "h": 206
+      }
+    }
   },
   "themes": {
     "forest": {

@@ -791,7 +791,19 @@ export class Scene {
       ctx.translate(ax * L, ay * L + cw * 0.18 - drop);
       ctx.rotate(Math.sin(t * 1.3 + f.phase) * 0.06);
       ctx.scale(pop, pop);
-      drawCrown(ctx, cw, t + f.phase);
+      const crown = this.assets.crown;
+      const cb = this.assets.crownBounds;
+      if (crown && cb) {
+        // 美術王冠：以王冠底邊中心對齊原點
+        const F = cw * (crown.fw / cb.w);            // 整格要畫多大
+        const baseY = (cb.y + cb.h) / crown.fh - 0.5; // 底邊在格子中的位置（相對中心）
+        const cx = (cb.x + cb.w / 2) / crown.fw - 0.5;
+        ctx.translate(-cx * F, -baseY * F);
+        ctx.imageSmoothingEnabled = false;
+        drawSprite(ctx, crown, F, t + f.phase);
+      } else {
+        drawCrown(ctx, cw, t + f.phase);
+      }
       ctx.restore();
     }
     ctx.restore();
