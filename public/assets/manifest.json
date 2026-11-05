@@ -131,33 +131,6 @@
     "lightRays": false
   },
   "fish": {
-    "tropical": {
-      "src": "fish/tropical-swim-v1.webp",
-      "hover": "fish/tropical-hover-v1.webp",
-      "cols": 6,
-      "rows": 4,
-      "frames": 24,
-      "fps": 10,
-      "thumb": "fish/tropical-thumb-v1.webp"
-    },
-    "clown": {
-      "src": "fish/clown-swim-v1.webp",
-      "hover": "fish/clown-hover-v1.webp",
-      "cols": 6,
-      "rows": 4,
-      "frames": 24,
-      "fps": 10,
-      "thumb": "fish/clown-thumb-v1.webp"
-    },
-    "puffer": {
-      "src": "fish/puffer-swim-v1.webp",
-      "hover": "fish/puffer-hover-v1.webp",
-      "cols": 6,
-      "rows": 4,
-      "frames": 24,
-      "fps": 10,
-      "thumb": "fish/puffer-thumb-v1.webp"
-    },
     "star_blue": {
       "src": "jelly/star_blue-v1.webp",
       "cols": 6,

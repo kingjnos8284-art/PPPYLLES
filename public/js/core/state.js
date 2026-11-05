@@ -8,7 +8,7 @@ import { hasLandPet } from '../config/landpets.js';
  * 日後換成伺服器存檔時，整包 GameState 就是要上傳的內容。
  */
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /**
  * @typedef {Object} FishData
@@ -98,6 +98,13 @@ export function migrate(raw) {
     const map = { crab: 'cat_tuxedo', turtle: 'dog_dachshund', capybara: 'dog_dachshund' };
     for (const p of raw.landPets ?? []) if (map[p.type]) p.type = map[p.type];
     raw.version = 3;
+  }
+  // v3 → v4：移除藍倒吊、小丑魚、河豚。已擁有的換成同品質、同年齡的星光水母
+  if (raw.version === 3) {
+    for (const f of raw.fish ?? []) {
+      if (!hasSpecies(f.species)) f.species = 'star_blue';
+    }
+    raw.version = 4;
   }
   // 陸地寵物：去除不認得與重複的，並確保有初始寵物
   /** @type {Set<string>} */

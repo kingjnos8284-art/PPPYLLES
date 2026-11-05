@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * 水中寵物設定（水母為主角，小魚為配角）。
+ * 水中寵物設定（目前全部為水母；kind 'fish' 保留給日後的小魚）。
  * 新增種類只要在這裡加一筆，並在 /assets/manifest.json 登記美術，商店與圖鑑會自動出現。
  *
  * kind       'jelly' 水母 / 'fish' 小魚
@@ -108,23 +108,6 @@ export const SPECIES = [
     price: 250000, income: 460, adultMin: 1080, lifeHours: 168, size: 135, speed: 10,
     shape: 'jelly', colors: ['#ffc83d', '#fff1b8'],
   },
-  // ===== 小魚 =====
-  {
-    id: 'tropical', kind: 'fish', name: '藍倒吊', desc: '寶藍色身體配上黃色尾巴的熱帶魚，總是精神飽滿地游來游去。',
-    price: 15, income: 0.08, adultMin: 5, lifeHours: 36, size: 70, speed: 60,
-    shape: 'fish', colors: ['#2f7de1', '#ffd23f'],
-  },
-  {
-    id: 'clown', kind: 'fish', name: '小丑魚', desc: '橘白相間的經典海水魚，個性活潑。',
-    price: 40, income: 0.2, adultMin: 10, lifeHours: 48, size: 74, speed: 55,
-    shape: 'fish', colors: ['#ff7a1a', '#ffffff'],
-  },
-  {
-    id: 'puffer', kind: 'fish', name: '河豚', desc: '全身長滿金黃色長刺的河豚，總是一臉不服氣，其實很好相處。',
-    price: 100, income: 0.45, adultMin: 20, lifeHours: 60, size: 80, speed: 35,
-    shape: 'round', colors: ['#f2d16b', '#8a6a3a'],
-  },
-
 ];
 
 /** @param {string} id */

@@ -51,7 +51,7 @@ export function openShop(tab) {
   const render = () => {
     const state = G.getState();
     const tabs = el('div', { class: 'tabs' }, [
-      tabBtn('水母與魚', 'fish'),
+      tabBtn('水母', 'fish'),
       tabBtn('貓狗', 'pets'),
       tabBtn('裝飾', 'decor'),
     ]);
