@@ -169,6 +169,22 @@ export class Scene {
         dx = clamp(w / 2 - layout.focusX * dw0, w - dw0, 0);
         dy = (h - ih * s) / 2;
       }
+      // 狗床被底部選單擋住時，把整個場景往上移，讓狗狗一定待在狗床上看得到
+      if (layout.pets) {
+        const dock = this.dockRect;
+        const pl = layout.pets;
+        let lift = 0;
+        for (const sp of pl.spots) {
+          if (sp.kind !== 'dog') continue;
+          const size = pl.dogSize * iw * s;
+          const x = dx + sp.x * iw * s;
+          const y = dy + sp.y * ih * s;
+          const behindDock = dock && x + size * 0.35 > dock.left && x - size * 0.35 < dock.right;
+          // 狗床要在選單上方，也不能超出畫面底部
+          lift = Math.max(lift, y - (behindDock ? dock.top - 6 : h - 10));
+        }
+        dy -= Math.min(Math.max(0, lift), h * 0.15);
+      }
       const dw = iw * s, dh = ih * s;
       this.bgPlace = { dx, dy, s };
       const X = (/** @type {number} */ u) => dx + u * dw;
@@ -759,7 +775,7 @@ export class Scene {
   spotVisible(s) {
     if (s.x - s.size * 0.4 < 0 || s.x + s.size * 0.4 > this.w || s.y > this.h) return false;
     const dock = this.dockRect;
-    if (dock) {
+    if (dock && s.kind !== 'dog') {
       const overlapX = s.x + s.size * 0.35 > dock.left && s.x - s.size * 0.35 < dock.right;
       // 腳底被選單擋住就不用（改用備用位置）
       if (overlapX && s.y > dock.top - s.size * 0.02) return false;
