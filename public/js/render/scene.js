@@ -106,7 +106,7 @@ export class Scene {
     this.fish = new Map();
     /** @type {Map<string, PetEnt>} */
     this.pets = new Map();
-    /** @type {{x:number,y:number,r:number,v:number,ph:number}[]} */
+    /** @type {{x:number,y:number,r:number,v:number,ph:number}[]} r 為像素泡泡的半徑（像素格數） */
     this.bubbles = [];
     /** @type {{x:number,y:number,text:string,color:string,t:number}[]} */
     this.floats = [];
@@ -581,7 +581,7 @@ export class Scene {
       this.bubbles.push({
         x: this.swim.left + (this.swim.right - this.swim.left) * emit + (Math.random() - 0.5) * 30,
         y: this.sandTop + 4,
-        r: (1.5 + Math.random() * 4) * this.unit,
+        r: bubbleSize(),
         v: 30 + Math.random() * 40,
         ph: Math.random() * 10,
       });
@@ -701,12 +701,10 @@ export class Scene {
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     for (const b of this.bubbles) {
-      const R = Math.max(3, Math.min(6, Math.round(b.r / P) + 2));
-      const img = pixelBubble(R);
+      const img = pixelBubble(b.r);
       const size = img.width * P;
-      const x = Math.round((b.x - size / 2) / P) * P;
-      const y = Math.round((b.y - size / 2) / P) * P;
-      ctx.drawImage(img, x, y, size, size);
+      // 位置不對齊像素格，移動保持滑順
+      ctx.drawImage(img, b.x - size / 2, b.y - size / 2, size, size);
     }
     ctx.restore();
   }
@@ -1000,7 +998,7 @@ export class Scene {
       this.bubbles.push({
         x: f.x + (Math.random() - 0.5) * f.L * 0.4,
         y: f.y + (Math.random() - 0.5) * f.L * 0.3,
-        r: (1.5 + Math.random() * 3) * this.unit,
+        r: Math.random() < 0.7 ? 2 : 3,
         v: 40 + Math.random() * 40,
         ph: Math.random() * 10,
       });
@@ -1058,6 +1056,22 @@ export class Scene {
   }
 }
 
+/**
+ * 點陣中的空白格是否在圓圈裡面（左右兩邊都有外框）
+ * @param {string} row @param {number} x
+ */
+function isInside(row, x) {
+  return row.lastIndexOf('o', x) >= 0 && row.indexOf('o', x) >= 0;
+}
+
+/** 泡泡大小：大多是小泡泡，偶爾一顆大泡泡 */
+function bubbleSize() {
+  const r = Math.random();
+  if (r < 0.06) return 5 + Math.round(Math.random());   // 偶爾的大泡泡
+  if (r < 0.35) return 3;
+  return 2;
+}
+
 /** @type {Map<number, HTMLCanvasElement>} */
 const bubbleCache = new Map();
 
@@ -1072,6 +1086,21 @@ function pixelBubble(R) {
   const c = document.createElement('canvas');
   c.width = n; c.height = n;
   const g = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d'));
+  // 小泡泡用手繪點陣，演算法畫出來的太小會像十字
+  /** @type {Record<number, string[]>} */
+  const PATTERNS = {
+    2: ['.ooo.', 'oh..o', 'o...o', 'o...o', '.ooo.'],
+    3: ['..ooo..', '.o...o.', 'o.h...o', 'o.....o', 'o.....o', '.o...o.', '..ooo..'],
+  };
+  if (PATTERNS[R]) {
+    PATTERNS[R].forEach((row, y) => [...row].forEach((ch, x) => {
+      g.fillStyle = ch === 'o' ? 'rgba(225,250,255,.9)' : ch === 'h' ? '#ffffff' : 'rgba(190,240,255,.16)';
+      const inside = ch !== '.' || isInside(row, x);
+      if (inside) g.fillRect(x, y, 1, 1);
+    }));
+    bubbleCache.set(R, c);
+    return c;
+  }
   for (let y = 0; y < n; y++) {
     for (let x = 0; x < n; x++) {
       const d = Math.hypot(x - R, y - R);
@@ -1080,11 +1109,13 @@ function pixelBubble(R) {
       g.fillRect(x, y, 1, 1);
     }
   }
-  // 反光
-  g.fillStyle = '#ffffff';
-  const hx = Math.round(R * 0.5), hy = Math.round(R * 0.5);
-  g.fillRect(hx, hy, 1, 1);
-  if (R >= 4) g.fillRect(hx + 1, hy, 1, 1), g.fillRect(hx, hy + 1, 1, 1);
+  // 反光（太小的泡泡不畫，避免看起來像十字）
+  if (R >= 3) {
+    g.fillStyle = '#ffffff';
+    const hx = Math.round(R * 0.5), hy = Math.round(R * 0.5);
+    g.fillRect(hx, hy, 1, 1);
+    if (R >= 5) g.fillRect(hx + 1, hy, 1, 1), g.fillRect(hx, hy + 1, 1, 1);
+  }
   bubbleCache.set(R, c);
   return c;
 }
