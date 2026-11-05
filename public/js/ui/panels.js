@@ -301,10 +301,7 @@ export function openSettings(opts) {
   stopLive();
   const state = G.getState();
   openSheet('settings', '設定', el('div', {}, [
-    el('div', { class: 'about-logo' }, [
-      el('img', { src: '/assets/ui/logo-v1.png', alt: '' }),
-      el('div', { class: 'boot-title' }, ['PPPYLLES']),
-    ]),
+    el('div', { class: 'about-title' }, ['PPPYLLES']),
     themePicker(),
     TEST_MODE.enabled && TEST_MODE.tools ? testTools() : null,
     el('div', { class: 'stat-rows' }, [
@@ -362,7 +359,7 @@ function testTools() {
   /** @param {string} label @param {() => void} fn */
   const btn = (label, fn) => el('button', { class: 'ghost-btn nine-btn2', onclick: fn }, [label]);
   return el('div', { class: 'test-tools nine-card' }, [
-    el('div', { class: 'test-title' }, ['🧪 測試工具']),
+    el('div', { class: 'test-title' }, ['測試工具']),
     el('div', { class: 'muted' }, ['測試模式中：購買全部免費、圖鑑全開、水族箱上限 ' + TEST_MODE.tankCapacity + ' 隻。']),
     el('div', { class: 'test-grid' }, [
       btn('快轉 10 分鐘', () => { G.fastForward(600); toast('時間快轉了 10 分鐘'); }),

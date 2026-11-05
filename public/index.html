@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#e9c999" />
+  <meta name="theme-color" content="#10192b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -13,7 +13,6 @@
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon-192.png" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  <link rel="preload" as="image" href="/assets/ui/logo-v1.png" />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -29,7 +28,7 @@
     <div class="hud-right">
       <div class="test-badge">測試模式</div>
       <div class="pill tank-pill nine-pill" id="hud-tank">
-        <img class="pill-ico px" src="/assets/ui/icon-tank-v1.png" alt="" draggable="false" />
+        <span class="ico i-tank pill-ico" aria-hidden="true"></span>
         <span class="coin-value" id="hud-tank-value">0/0</span>
       </div>
     </div>
@@ -37,10 +36,10 @@
 
   <!-- 底部選單 -->
   <nav class="hud-dock nine-dock">
-    <button class="dock-btn" data-open="shop"><img class="dock-ico px" src="/assets/ui/icon-shop-v1.png" alt="" draggable="false" /><span>商店</span></button>
-    <button class="dock-btn" data-open="codex"><img class="dock-ico px" src="/assets/ui/icon-codex-v1.png" alt="" draggable="false" /><span>圖鑑</span></button>
-    <button class="dock-btn is-locked" data-open="decor"><img class="dock-ico px" src="/assets/ui/icon-decor-v1.png" alt="" draggable="false" /><span>裝飾</span></button>
-    <button class="dock-btn" data-open="settings"><img class="dock-ico px" src="/assets/ui/icon-settings-v1.png" alt="" draggable="false" /><span>設定</span></button>
+    <button class="dock-btn" data-open="shop" title="商店"><span class="ico i-shop dock-ico"></span><span class="dock-label">商店</span></button>
+    <button class="dock-btn" data-open="codex" title="圖鑑"><span class="ico i-codex dock-ico"></span><span class="dock-label">圖鑑</span></button>
+    <button class="dock-btn is-locked" data-open="decor" title="裝飾"><span class="ico i-decor dock-ico"></span><span class="dock-label">裝飾</span></button>
+    <button class="dock-btn" data-open="settings" title="設定"><span class="ico i-settings dock-ico"></span><span class="dock-label">設定</span></button>
   </nav>
 
   <!-- 面板容器 -->
@@ -48,7 +47,7 @@
   <section class="sheet nine-panel" id="sheet" role="dialog" aria-modal="true" hidden>
     <header class="sheet-head">
       <h2 class="sheet-title" id="sheet-title"></h2>
-      <button class="sheet-close" id="sheet-close" aria-label="關閉">×</button>
+      <button class="sheet-close i-close" id="sheet-close" aria-label="關閉">×</button>
     </header>
     <div class="sheet-body" id="sheet-body"></div>
   </section>
@@ -56,10 +55,7 @@
   <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
 
   <div class="boot" id="boot">
-    <div class="boot-logo">
-      <img src="/assets/ui/logo-v1.png" alt="" />
-      <div class="boot-title">PPPYLLES</div>
-    </div>
+    <div class="boot-title">PPPYLLES</div>
     <div class="boot-sub">水族箱準備中…</div>
   </div>
 
