@@ -237,14 +237,14 @@
                 "x": 0.14,
                 "y": 0.326,
                 "face": 1,
-                "pet": "cat_tuxedo"
+                "rank": 1
               },
               {
                 "kind": "cat",
                 "x": 0.11,
                 "y": 0.505,
                 "face": 1,
-                "pet": "cat_tabby"
+                "rank": 2
               },
               {
                 "kind": "cat",
@@ -305,14 +305,14 @@
                 "x": 0.095,
                 "y": 0.712,
                 "face": 1,
-                "pet": "cat_tuxedo"
+                "rank": 1
               },
               {
                 "kind": "cat",
                 "x": 0.165,
                 "y": 0.81,
                 "face": 1,
-                "pet": "cat_tabby"
+                "rank": 2
               },
               {
                 "kind": "dog",
@@ -371,14 +371,14 @@
                 "x": 0.146,
                 "y": 0.333,
                 "face": 1,
-                "pet": "cat_tuxedo"
+                "rank": 1
               },
               {
                 "kind": "cat",
                 "x": 0.122,
                 "y": 0.512,
                 "face": 1,
-                "pet": "cat_tabby"
+                "rank": 2
               },
               {
                 "kind": "cat",
@@ -439,14 +439,14 @@
                 "x": 0.09,
                 "y": 0.711,
                 "face": 1,
-                "pet": "cat_tuxedo"
+                "rank": 1
               },
               {
                 "kind": "cat",
                 "x": 0.08,
                 "y": 0.79,
                 "face": 1,
-                "pet": "cat_tabby"
+                "rank": 2
               },
               {
                 "kind": "cat",

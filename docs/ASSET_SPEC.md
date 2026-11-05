@@ -23,7 +23,7 @@
 | `stellar` | 星空水晶館 | 500,000 | `bg/stellar-landscape-v1.webp`、`bg/stellar-portrait-v1.webp` |
 
 主題設定在 `public/assets/manifest.json` 的 `themes`，每個主題有價格（`price`）、橫／直背景、`layout`（水族箱水域、游動範圍、寵物位置）與縮圖。
-寵物位置可指定給特定寵物（`pet`），或標成備用位置（`fallback`）：當一般位置超出畫面或被底部選單擋住時才使用。
+寵物位置可設定固定順序（`rank`：1 = 同種類中最先擁有的那隻，2 = 第二隻…），或標成備用位置（`fallback`）：當一般位置超出畫面或被底部選單擋住時才使用。
 新增主題：沿用相同構圖（左側貓跳台、中央水族箱、右下兩張狗床），交給 Claude 量測位置即可。
 
 ## 1. 主畫面背景（水族箱）
@@ -97,12 +97,12 @@
 寵物會在自己的位置輪流坐著／趴著／待機／睡覺，貓偶爾換到貓跳台的另一層，點擊播放互動動畫與愛心對話框。
 
 已完成：
-- `cat_tuxedo` OREO（賓士貓）— 固定在貓跳台頂層（素材包 `housepets_motion_v1`）
-- `cat_tabby` LUNA（虎斑貓）— 固定在貓跳台第二層（素材包 `tabby_cat_motion_v1`）
+- `cat_tuxedo` OREO（賓士貓）（素材包 `housepets_motion_v1`）
+- `cat_tabby` LUNA（虎斑貓）（素材包 `tabby_cat_motion_v1`）
 - `dog_dachshund` NANA（長毛臘腸）
 
 規劃中：再 1 隻貓、1 隻狗（共 3 貓 2 狗）。
-固定位置寫在背景 manifest 的 `layout.pets.spots[].pet`；沒有指定位置的寵物會自動找空位。
+固定位置寫在背景 manifest 的 `layout.pets.spots[].rank`：貓咪依擁有的先後順序入座（先擁有的在貓跳台頂層）；沒有排到固定位置的寵物會自動找空位。
 
 **新寵物請沿用同一套規格：**
 

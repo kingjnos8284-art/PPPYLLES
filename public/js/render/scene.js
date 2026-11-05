@@ -60,7 +60,7 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {number} y
  * @property {number} face
  * @property {number} size   動畫格寬度（px）
- * @property {string} [pet]   指定給哪隻寵物
+ * @property {number} [rank]  固定位置的順序（1 = 最先擁有的那隻）
  * @property {boolean} [fallback]  備用位置
  */
 
@@ -213,7 +213,7 @@ export class Scene {
       if (layout.pets) {
         const pl = layout.pets;
         this.spots = pl.spots.map((sp) => ({
-          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face, pet: sp.pet, fallback: sp.fallback,
+          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face, rank: sp.rank, fallback: sp.fallback,
           size: (sp.kind === 'cat' ? pl.catSize : pl.dogSize) * dw,
         }));
       }
@@ -552,7 +552,7 @@ export class Scene {
         if (p.moveAt >= 0 && t - p.moveAt > 1) p.moveAt = -1;
         if (t > p.poseUntil && p.interactAt < 0 && p.moveAt < 0) {
           // 有指定位置的寵物不會換位置
-          const fixed = this.spots[p.spot]?.pet === p.type;
+          const fixed = !!this.spots[p.spot]?.rank;
           const target = !fixed && p.kind === 'cat' && Math.random() < 0.3 ? this.freeSpot(p.kind, p.spot) : -1;
           if (target >= 0 && target !== p.spot) { p.moveAt = t; p.moveTo = target; }
           p.pose = this.randomPose(p.pose);
@@ -826,11 +826,14 @@ export class Scene {
   }
 
   /**
-   * 寵物的位置：有指定位置就用指定的，否則找一個空位
+   * 寵物的位置：依擁有的先後順序坐固定位置（最先擁有的貓在貓跳台頂層、第二隻在第二層），
+   * 固定位置坐滿或看不到時，才另外找空位
    * @param {string} type @param {'cat'|'dog'} kind
    */
   spotFor(type, kind) {
-    const fixed = this.spots.findIndex((s) => s.pet === type);
+    const order = this.getState().landPets.filter((p) => getLandPet(p.type).kind === kind).map((p) => p.type);
+    const rank = order.indexOf(type) + 1;
+    const fixed = rank > 0 ? this.spots.findIndex((s) => s.kind === kind && s.rank === rank) : -1;
     return fixed >= 0 && this.spotVisible(this.spots[fixed]) ? fixed : this.freeSpot(kind, -1);
   }
 
@@ -857,7 +860,7 @@ export class Scene {
     const used = new Set([...this.pets.values()].flatMap((p) => [p.spot, p.moveTo]));
     // 只用完整出現在畫面裡、沒被選單擋住的位置；優先用一般位置，沒有才用備用位置
     const free = this.spots.map((s, i) => i)
-      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && !this.spots[i].pet && this.spotVisible(this.spots[i]));
+      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && !this.spots[i].rank && this.spotVisible(this.spots[i]));
     const main = free.filter((i) => !this.spots[i].fallback);
     const pool = main.length ? main : free;
     return pool.length ? pool[Math.floor(Math.random() * pool.length)] : -1;

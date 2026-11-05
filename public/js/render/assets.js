@@ -46,7 +46,7 @@
  * @property {number} x           腳底位置（佔圖片寬／高的比例）
  * @property {number} y
  * @property {number} face        在這個位置面向：1 = 右，-1 = 左
- * @property {string} [pet]       指定給某隻寵物的固定位置（例如 OREO 固定在貓跳台頂層）
+ * @property {number} [rank]      固定位置的順序：同種類中第幾隻擁有的寵物坐這裡（1 = 第一隻，例如貓跳台頂層）
  * @property {boolean} [fallback] 備用位置：只有其他位置被選單擋住或超出畫面時才使用
  */
 
