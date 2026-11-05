@@ -63,8 +63,8 @@ export function fmtDuration(sec) {
   const d = Math.floor(sec / 86400);
   const h = Math.floor((sec % 86400) / 3600);
   const m = Math.floor((sec % 3600) / 60);
-  if (d > 0) return `${d} 天 ${h} 小時`;
-  if (h > 0) return `${h} 小時 ${m} 分`;
+  if (d > 0) return h ? `${d} 天 ${h} 小時` : `${d} 天`;
+  if (h > 0) return m ? `${h} 小時 ${m} 分` : `${h} 小時`;
   if (m > 0) return `${m} 分鐘`;
   return `${sec} 秒`;
 }

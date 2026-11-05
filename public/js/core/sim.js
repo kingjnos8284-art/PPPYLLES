@@ -11,6 +11,29 @@ import { getLandPet } from '../config/landpets.js';
 /** @typedef {import('./state.js').GameState} GameState */
 /** @typedef {import('./state.js').FishData} FishData */
 
+/**
+ * 成長階段
+ * @param {FishData} f
+ * @returns {import('../config/balance.js').StageId}
+ */
+export function stageOf(f) {
+  const adultSec = getSpecies(f.species).adultMin * 60;
+  if (f.ageSec < adultSec * BALANCE.babyFraction) return 'baby';
+  if (f.ageSec < adultSec) return 'juvenile';
+  return 'adult';
+}
+
+/** 成長進度 0~1 @param {FishData} f */
+export function growthProgress(f) {
+  return Math.min(1, f.ageSec / (getSpecies(f.species).adultMin * 60));
+}
+
+/** 體型（相對成年 0~1），從寶寶平滑長到成年 @param {FishData} f */
+export function growthScale(f) {
+  const s0 = BALANCE.stages.baby.scale;
+  return s0 + (1 - s0) * Math.sqrt(growthProgress(f));
+}
+
 /** 陸地寵物帶來的總加成 @param {GameState} state */
 export function petBonus(state) {
   return state.landPets.reduce((sum, p) => sum + getLandPet(p.type).bonus, 0);
@@ -22,7 +45,8 @@ export function petBonus(state) {
  * @param {number} bonus
  */
 export function fishIncome(f, bonus) {
-  return getSpecies(f.species).income * (1 + bonus);
+  const st = BALANCE.stages[stageOf(f)];
+  return getSpecies(f.species).income * st.incomeMult * (1 + bonus);
 }
 
 /** 全體每秒產出 @param {GameState} state */
@@ -37,8 +61,8 @@ export function totalIncome(state) {
  */
 
 /**
- * 推進遊戲時間：累積收益，並記錄每隻夥伴已陪伴的時間。
- * 水中寵物沒有成長與壽命，不會離世。
+ * 推進遊戲時間：累積收益，水母隨時間成長（沒有壽命，不會離世）。
+ * 長時間（離線）切成小段計算，確保中途長大後的收益正確。
  * @param {GameState} state
  * @param {number} dtSec
  * @returns {AdvanceResult}
@@ -47,8 +71,14 @@ export function advance(state, dtSec) {
   /** @type {AdvanceResult} */
   const result = { earned: 0 };
   if (dtSec <= 0) return result;
-  result.earned = totalIncome(state) * dtSec;
-  for (const f of state.fish) f.ageSec += dtSec;
+  const STEP = 60;
+  let remaining = dtSec;
+  while (remaining > 0) {
+    const dt = Math.min(STEP, remaining);
+    remaining -= dt;
+    result.earned += totalIncome(state) * dt;
+    for (const f of state.fish) f.ageSec += dt;
+  }
   state.coins += result.earned;
   state.totalEarned += result.earned;
   return result;
@@ -153,7 +183,7 @@ export function tapLandPet(state, petId, now) {
 export function settleOffline(state, awaySec) {
   const countedSec = Math.min(awaySec, BALANCE.offlineCapHours * 3600);
   const r = advance(state, countedSec);
-  // 已陪伴時間照真實時間計算
+  // 成長照真實時間計算（收益只算上限內）
   for (const f of state.fish) f.ageSec += awaySec - countedSec;
   return { earned: r.earned, awaySec, countedSec };
 }

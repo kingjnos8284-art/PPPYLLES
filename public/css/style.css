@@ -356,3 +356,9 @@ img { -webkit-user-drag: none; }
 .theme-card.is-active { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .55); }
 .theme-card.is-active .theme-name { color: var(--ink); }
 .theme-card.is-loading { opacity: .5; }
+
+/* 成長進度 */
+.growth { display: flex; align-items: center; gap: 10px; flex: 1; justify-content: flex-end; }
+.growth .bar { width: min(140px, 40vw); height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .15); overflow: hidden; }
+.growth .bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #9fe8ff, #ffffff); }
+.growth-left { font-size: 12px; color: var(--ink-soft); font-weight: 500; white-space: nowrap; }

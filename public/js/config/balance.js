@@ -24,8 +24,23 @@ export const BALANCE = {
   starterFish: 'star_blue',
   starterPet: 'cat_tuxedo',
 
-  /** 水母在畫面上的大小倍率。1 = 美術原始設定大小，數字越小越小 */
+  /** 水母「成年」時在畫面上的大小倍率。1 = 美術原始設定大小，數字越小越小 */
   creatureScale: 0.6,
+  /**
+   * 成長階段（沒有壽命，長大後一直維持成年）。
+   *   baby      寶寶   0 ~ 長成時間 × babyFraction
+   *   juvenile  成長期 ~ 長成時間
+   *   adult     成年
+   * incomeMult  該階段的產出倍率
+   * scale       該階段開始時的體型（相對成年），之後會平滑長大
+   */
+  stages: {
+    baby:     { name: '寶寶',   incomeMult: 0.3, scale: 0.5 },
+    juvenile: { name: '成長期', incomeMult: 0.6, scale: 0.75 },
+    adult:    { name: '成年',   incomeMult: 1.0, scale: 1.0 },
+  },
+  babyFraction: 0.4,
+
   /** 水母游動速度倍率。1 = species.js 設定的速度 */
   swimSpeed: 2,
   /** 水母每次游動的距離（佔水族箱寬度的比例，0~1）。越大游得越遠 */
@@ -46,6 +61,8 @@ export const BALANCE = {
 
 };
 
+
+/** @typedef {keyof typeof BALANCE.stages} StageId */
 
 /** 目前的水族箱容量 */
 export function tankCapacity() {

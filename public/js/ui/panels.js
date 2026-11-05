@@ -3,7 +3,7 @@ import { SPECIES, getSpecies } from '../config/species.js';
 import { LAND_PETS, getLandPet } from '../config/landpets.js';
 import { BALANCE, TEST_MODE, tankCapacity, priceOf } from '../config/balance.js';
 import { DECOR_ENABLED } from '../config/decor.js';
-import { buyFish, buyLandPet, releaseFish, codexProgress, fishIncome, petBonus } from '../core/sim.js';
+import { buyFish, buyLandPet, releaseFish, codexProgress, fishIncome, petBonus, stageOf, growthProgress } from '../core/sim.js';
 import { fishThumb, petThumb } from '../render/thumb.js';
 import { el, fmt, fmtRate, fmtDuration, coinIcon } from './dom.js';
 import { openSheet, replaceSheetContent, closeSheet, currentSheet } from './sheet.js';
@@ -72,7 +72,7 @@ export function openShop(tab) {
             el('div', { class: 'card-thumb' }, [fishThumb(sp.id, 64, 64, { silhouette: !unlocked })]),
             el('div', {}, [
               el('div', { class: 'card-name' }, [unlocked ? sp.name : '？？？']),
-              el('div', { class: 'card-meta' }, [`每秒 +${fmtRate(sp.income)} 起`]),
+              el('div', { class: 'card-meta' }, [`成年每秒 +${fmtRate(sp.income)}・${fmtDuration(sp.adultMin * 60)}長大`]),
             ]),
             el('button', {
               class: 'buy-btn nine-btn',
@@ -161,7 +161,7 @@ export function openReveal(uid) {
   const node = el('div', { class: 'reveal' }, [
     el('div', { class: 'reveal-hero' }, [fishThumb(sp.id, 170, 170)]),
     el('div', { class: 'reveal-title' }, [`${sp.name} 來到了水族箱！`]),
-    el('div', { class: 'muted' }, [`每秒 +${fmtRate(sp.income)}`, el('br'), '牠會一直陪伴在水族箱裡。']),
+    el('div', { class: 'muted' }, ['現在還是寶寶，', `大約 ${fmtDuration(sp.adultMin * 60)}後長大。`, el('br'), '長大後產出會越來越多。']),
     el('button', { class: 'primary-btn nine-btn', onclick: () => openShop() }, ['繼續逛商店']),
     el('button', { class: 'ghost-btn nine-btn2', onclick: () => { closeSheet(); G.select(uid); } }, ['去看看牠']),
   ]);
@@ -209,7 +209,8 @@ function openCodexEntry(speciesId) {
       row('累計飼養', `${entry?.raised ?? 0} 隻`),
       row('累計放生', `${entry?.released ?? 0} 隻`),
       row('目前在水族箱', `${alive} 隻`),
-      row('基礎產出', `每秒 +${fmtRate(sp.income)}`),
+      row('成年產出', `每秒 +${fmtRate(sp.income)}`),
+      row('長大時間', fmtDuration(sp.adultMin * 60)),
     ]),
     el('button', { class: 'ghost-btn nine-btn2', onclick: openCodex }, ['返回圖鑑']),
   ]));
@@ -230,6 +231,8 @@ export function openFishInfo(uid) {
     return el('div', {}, [
       el('div', { class: 'info-hero' }, [fishThumb(sp.id, 150, 150)]),
       el('div', { class: 'stat-rows' }, [
+        row('階段', BALANCE.stages[stageOf(f)].name),
+        growthRow(f, sp),
         row('目前產出', `每秒 +${fmtRate(fishIncome(f, petBonus(state)))}`),
         row('已陪伴', fmtDuration(f.ageSec)),
       ]),
@@ -264,6 +267,23 @@ export function openFishInfo(uid) {
     onClose: () => { stopLive(); G.select(null); },
   });
   live(render);
+}
+
+/**
+ * 成長進度列（長大後顯示「已長大」）
+ * @param {import('../core/state.js').FishData} f
+ * @param {import('../config/species.js').Species} sp
+ */
+function growthRow(f, sp) {
+  const p = growthProgress(f);
+  if (p >= 1) return row('成長', '已長大');
+  return el('div', { class: 'stat-row growth-row' }, [
+    el('span', {}, ['成長']),
+    el('div', { class: 'growth' }, [
+      el('div', { class: 'bar' }, [el('i', { style: { width: `${(p * 100).toFixed(1)}%` } })]),
+      el('span', { class: 'growth-left' }, [`還要 ${fmtDuration(sp.adultMin * 60 - f.ageSec)}`]),
+    ]),
+  ]);
 }
 
 /** @param {string} label @param {Node|string} value */

@@ -1,6 +1,7 @@
 // @ts-check
 import { getSpecies } from '../config/species.js';
 import { BALANCE } from '../config/balance.js';
+import { growthScale } from '../core/sim.js';
 import { getLandPet } from '../config/landpets.js';
 import { drawSprite, drawCover } from './assets.js';
 import { viewportSize } from './viewport.js';
@@ -432,7 +433,7 @@ export class Scene {
         this.pickTarget(e);
         this.fish.set(d.uid, e);
       }
-      e.L = getSpecies(d.species).size * this.unit * BALANCE.creatureScale;
+      e.L = getSpecies(d.species).size * this.unit * BALANCE.creatureScale * growthScale(d);
       this.assets.requestFish(d.species);
     }
     for (const e of this.fish.values()) {
