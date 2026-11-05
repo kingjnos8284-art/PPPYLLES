@@ -29,13 +29,15 @@
             "kind": "cat",
             "x": 0.144,
             "y": 0.352,
-            "face": 1
+            "face": 1,
+            "pet": "cat_tuxedo"
           },
           {
             "kind": "cat",
             "x": 0.131,
             "y": 0.514,
-            "face": 1
+            "face": 1,
+            "pet": "cat_tabby"
           },
           {
             "kind": "cat",
@@ -93,9 +95,10 @@
         "spots": [
           {
             "kind": "cat",
-            "x": 0.1,
+            "x": 0.12,
             "y": 0.703,
-            "face": 1
+            "face": 1,
+            "pet": "cat_tuxedo"
           },
           {
             "kind": "cat",
@@ -107,7 +110,8 @@
             "kind": "cat",
             "x": 0.178,
             "y": 0.814,
-            "face": 1
+            "face": 1,
+            "pet": "cat_tabby"
           },
           {
             "kind": "dog",
@@ -272,6 +276,26 @@
         "frames": 12
       },
       "thumb": "pets/cat_tuxedo-thumb-v1.webp"
+    },
+    "cat_tabby": {
+      "facing": 1,
+      "anchorY": 0.8854,
+      "cols": 6,
+      "rows": 4,
+      "frames": 24,
+      "fps": 10,
+      "states": {
+        "sit": "pets/cat_tabby-sit-v1.webp",
+        "lie": "pets/cat_tabby-lie-v1.webp",
+        "idle": "pets/cat_tabby-idle-v1.webp",
+        "sleep": "pets/cat_tabby-sleep-v1.webp"
+      },
+      "interact": {
+        "src": "pets/cat_tabby-interact-v1.webp",
+        "rows": 2,
+        "frames": 12
+      },
+      "thumb": "pets/cat_tabby-thumb-v1.webp"
     },
     "dog_dachshund": {
       "facing": -1,

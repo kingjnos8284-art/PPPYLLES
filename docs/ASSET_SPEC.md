@@ -83,8 +83,13 @@
 住在房間裡：貓在貓跳台、狗在狗窩旁。位置寫在背景 manifest 的 `layout.pets.spots`，
 寵物會在自己的位置輪流坐著／趴著／待機／睡覺，貓偶爾換到貓跳台的另一層，點擊播放互動動畫與愛心對話框。
 
-已完成：`cat_tuxedo` 賓士貓、`dog_dachshund` 長毛臘腸（素材包 `housepets_motion_v1`）。
-規劃中：再 2 隻貓、1 隻狗（共 3 貓 2 狗）。
+已完成：
+- `cat_tuxedo` OREO（賓士貓）— 固定在貓跳台頂層（素材包 `housepets_motion_v1`）
+- `cat_tabby` LUNA（虎斑貓）— 固定在貓跳台第二層（素材包 `tabby_cat_motion_v1`）
+- `dog_dachshund` NANA（長毛臘腸）
+
+規劃中：再 1 隻貓、1 隻狗（共 3 貓 2 狗）。
+固定位置寫在背景 manifest 的 `layout.pets.spots[].pet`；沒有指定位置的寵物會自動找空位。
 
 **新寵物請沿用同一套規格：**
 

@@ -44,6 +44,7 @@
  * @property {number} x           腳底位置（佔圖片寬／高的比例）
  * @property {number} y
  * @property {number} face        在這個位置面向：1 = 右，-1 = 左
+ * @property {string} [pet]       指定給某隻寵物的固定位置（例如 OREO 固定在貓跳台頂層）
  */
 
 /**

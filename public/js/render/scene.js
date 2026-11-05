@@ -56,6 +56,7 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {number} y
  * @property {number} face
  * @property {number} size   動畫格寬度（px）
+ * @property {string} [pet]   指定給哪隻寵物
  */
 
 /** 各種姿勢出現的機率與持續時間（秒） */
@@ -175,7 +176,7 @@ export class Scene {
       if (layout.pets) {
         const pl = layout.pets;
         this.spots = pl.spots.map((sp) => ({
-          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face,
+          kind: sp.kind, x: X(sp.x), y: Y(sp.y), face: sp.face, pet: sp.pet,
           size: (sp.kind === 'cat' ? pl.catSize : pl.dogSize) * dw,
         }));
       }
@@ -207,7 +208,7 @@ export class Scene {
       // 換了背景（例如手機轉向）後，重新分配位置
       p.spot = -1;
     }
-    for (const p of this.pets.values()) p.spot = this.freeSpot(p.kind, -1);
+    for (const p of this.pets.values()) p.spot = this.spotFor(p.type, p.kind);
   }
 
   buildBackground() {
@@ -389,7 +390,7 @@ export class Scene {
           walking: false,
           nextChange: this.time + 1 + Math.random() * 3,
           hop: 0,
-          spot: this.freeSpot(kind, -1),
+          spot: this.spotFor(p.type, kind),
           pose: this.randomPose(),
           poseUntil: this.time + 5 + Math.random() * 10,
           interactAt: -1,
@@ -470,7 +471,9 @@ export class Scene {
         if (p.moveAt >= 0 && t - p.moveAt > 0.5 && p.moveTo >= 0) { p.spot = p.moveTo; p.moveTo = -1; }
         if (p.moveAt >= 0 && t - p.moveAt > 1) p.moveAt = -1;
         if (t > p.poseUntil && p.interactAt < 0 && p.moveAt < 0) {
-          const target = p.kind === 'cat' && Math.random() < 0.3 ? this.freeSpot(p.kind, p.spot) : -1;
+          // 有指定位置的寵物不會換位置
+          const fixed = this.spots[p.spot]?.pet === p.type;
+          const target = !fixed && p.kind === 'cat' && Math.random() < 0.3 ? this.freeSpot(p.kind, p.spot) : -1;
           if (target >= 0 && target !== p.spot) { p.moveAt = t; p.moveTo = target; }
           p.pose = this.randomPose(p.pose);
           const ps = POSES[/** @type {keyof typeof POSES} */ (p.pose)];
@@ -694,7 +697,16 @@ export class Scene {
   }
 
   /**
-   * 找一個沒有其他寵物的位置
+   * 寵物的位置：有指定位置就用指定的，否則找一個空位
+   * @param {string} type @param {'cat'|'dog'} kind
+   */
+  spotFor(type, kind) {
+    const fixed = this.spots.findIndex((s) => s.pet === type);
+    return fixed >= 0 ? fixed : this.freeSpot(kind, -1);
+  }
+
+  /**
+   * 找一個沒有其他寵物、也沒有指定給別人的位置
    * @param {'cat'|'dog'} kind @param {number} exclude
    */
   freeSpot(kind, exclude) {
@@ -702,7 +714,7 @@ export class Scene {
     // 只用完整出現在畫面裡的位置（不同螢幕比例裁切範圍不同）
     const visible = (/** @type {ScreenSpot} */ s) => s.x - s.size * 0.5 >= 0 && s.x + s.size * 0.5 <= this.w && s.y <= this.h;
     const free = this.spots.map((s, i) => i)
-      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && visible(this.spots[i]));
+      .filter((i) => this.spots[i].kind === kind && i !== exclude && !used.has(i) && !this.spots[i].pet && visible(this.spots[i]));
     return free.length ? free[Math.floor(Math.random() * free.length)] : -1;
   }
 
