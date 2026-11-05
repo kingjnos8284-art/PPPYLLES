@@ -336,7 +336,7 @@ function themePicker() {
   const current = G.getState().theme;
   return el('div', { class: 'theme-picker' }, [
     el('div', { class: 'test-title' }, ['房間主題']),
-    el('div', { class: 'theme-grid' }, G.themes().map((t) => el('button', {
+    el('div', { class: 'theme-grid', style: { gridTemplateColumns: `repeat(${Math.min(3, G.themes().length)}, 1fr)` } }, G.themes().map((t) => el('button', {
       class: 'theme-card nine-card' + (t.id === current ? ' is-active' : ''),
       onclick: async (/** @type {MouseEvent} */ e) => {
         if (t.id === G.getState().theme) return;
