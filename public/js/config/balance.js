@@ -8,7 +8,7 @@
  */
 export const TEST_MODE = {
   enabled: true,
-  freeShop: true,
+  freeShop: false,
   codexAll: true,
   tankCapacity: 30,
   tools: true,
