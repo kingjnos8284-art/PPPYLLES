@@ -35,6 +35,7 @@
  * @property {number} floorY        陸地寵物腳底所在高度
  * @property {[number, number]} floorX  陸地寵物左右可走範圍
  * @property {number} focusX        畫面太窄（手機直拿）時，以這個水平位置為中心裁切
+ * @property {boolean} [fitWidth]  畫面比圖細長時，完整顯示整張寬度（貼齊上緣、下方延伸地板），不裁切左右
  * @property {PetLayout} [pets]      陸地寵物的固定位置（貓跳台、狗窩等）
  */
 

@@ -319,7 +319,8 @@
                 "face": -1
               }
             ]
-          }
+          },
+          "fitWidth": true
         }
       },
       "effects": {
@@ -469,7 +470,8 @@
                 "fallback": true
               }
             ]
-          }
+          },
+          "fitWidth": true
         }
       }
     },
@@ -621,7 +623,8 @@
                 "fallback": true
               }
             ]
-          }
+          },
+          "fitWidth": true
         }
       }
     }

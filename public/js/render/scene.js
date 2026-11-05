@@ -157,10 +157,19 @@ export class Scene {
       // 背景圖有版面設定：魚游在圖中的水族箱裡，陸地寵物走在地板上
       const iw = this.bgEntry.img.naturalWidth;
       const ih = this.bgEntry.img.naturalHeight;
-      const s = Math.max(w / iw, h / ih);
+      let s = Math.max(w / iw, h / ih);
+      let dx, dy;
+      if (layout.fitWidth && iw * (h / ih) > w * 1.01) {
+        // 完整顯示整張寬度：貼齊上緣，下方不足的部分用地板往下延伸
+        s = w / iw;
+        dx = 0;
+        dy = 0;
+      } else {
+        const dw0 = iw * s;
+        dx = clamp(w / 2 - layout.focusX * dw0, w - dw0, 0);
+        dy = (h - ih * s) / 2;
+      }
       const dw = iw * s, dh = ih * s;
-      const dx = clamp(w / 2 - layout.focusX * dw, w - dw, 0);
-      const dy = (h - dh) / 2;
       this.bgPlace = { dx, dy, s };
       const X = (/** @type {number} */ u) => dx + u * dw;
       const Y = (/** @type {number} */ v) => dy + v * dh;
@@ -230,7 +239,10 @@ export class Scene {
     if (bgEntry && this.bgPlace) {
       const { dx, dy, s } = this.bgPlace;
       g.imageSmoothingQuality = 'high';
-      g.drawImage(bgEntry.img, dx, dy, bgEntry.img.naturalWidth * s, bgEntry.img.naturalHeight * s);
+      const img = bgEntry.img;
+      const dh = img.naturalHeight * s;
+      g.drawImage(img, dx, dy, img.naturalWidth * s, dh);
+      if (dy + dh < h - 0.5) this.extendFloor(g, img, dx, dy + dh, s, h);
     } else if (bgEntry) {
       // 沒有版面設定的背景：底部對齊，確保沙地永遠在畫面下方
       drawCover(g, bgEntry.img, 0, 0, w, h, 1);
@@ -302,6 +314,34 @@ export class Scene {
         g.fill();
       }
     }
+  }
+
+  /**
+   * 背景圖比畫面短時，把地板往下延伸：用圖片最下方兩側的地板顏色填滿，往下逐漸加深
+   * （不直接重複貼圖，避免地毯等物件重複出現）
+   * @param {CanvasRenderingContext2D} g @param {HTMLImageElement} img
+   * @param {number} dx @param {number} top @param {number} s @param {number} h
+   */
+  extendFloor(g, img, dx, top, s, h) {
+    const [r, gr, b] = floorColor(img);
+    const grad = g.createLinearGradient(0, top, 0, h);
+    grad.addColorStop(0, `rgb(${r},${gr},${b})`);
+    grad.addColorStop(1, `rgb(${Math.round(r * 0.78)},${Math.round(gr * 0.78)},${Math.round(b * 0.78)})`);
+    g.fillStyle = grad;
+    g.fillRect(0, top - 1, this.w, h - top + 1);
+    // 接縫處用原圖最下方幾列往下淡出，讓地板自然銜接
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const rows = Math.max(2, Math.round(ih * 0.006));
+    const fade = Math.min(h - top, 28);
+    g.save();
+    g.globalAlpha = 0.55;
+    g.drawImage(img, 0, ih - rows, iw, rows, dx, top, iw * s, fade);
+    g.restore();
+    const sh = g.createLinearGradient(0, top, 0, top + fade);
+    sh.addColorStop(0, `rgba(${r},${gr},${b},0)`);
+    sh.addColorStop(1, `rgba(${r},${gr},${b},1)`);
+    g.fillStyle = sh;
+    g.fillRect(0, top, this.w, fade);
   }
 
   buildPlants() {
@@ -960,6 +1000,34 @@ export class Scene {
     }
     return best ? { kind: 'fish', uid: best.uid } : null;
   }
+}
+
+/** @type {WeakMap<HTMLImageElement, number[]>} */
+const floorCache = new WeakMap();
+
+/**
+ * 取圖片最下方左右兩側（通常只有地板）的平均顏色
+ * @param {HTMLImageElement} img
+ */
+function floorColor(img) {
+  const hit = floorCache.get(img);
+  if (hit) return hit;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const c = document.createElement('canvas');
+  c.width = 64; c.height = 4;
+  const x = /** @type {CanvasRenderingContext2D} */ (c.getContext('2d', { willReadFrequently: true }));
+  x.drawImage(img, 0, ih - Math.round(ih * 0.015), iw, Math.round(ih * 0.015), 0, 0, 64, 4);
+  const d = x.getImageData(0, 0, 64, 4).data;
+  let r = 0, g = 0, b = 0, n = 0;
+  for (let yy = 0; yy < 4; yy++) {
+    for (const xx of [0, 1, 2, 61, 62, 63]) {
+      const k = (yy * 64 + xx) * 4;
+      r += d[k]; g += d[k + 1]; b += d[k + 2]; n++;
+    }
+  }
+  const out = [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+  floorCache.set(img, out);
+  return out;
 }
 
 /** @param {number} v @param {number} a @param {number} b */
