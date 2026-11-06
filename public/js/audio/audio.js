@@ -8,6 +8,10 @@
  * 所以之後拿到正式的音樂／音效檔，只要放進 assets/audio/ 並寫進 manifest，不用改程式。
  *
  * 手機瀏覽器規定「使用者點過畫面」之後才能發出聲音，所以第一次點擊時才真正啟動。
+ * iOS 特別注意：
+ *   - 只有「手指放開」（touchend／click）才算允許播放，按下（pointerdown／touchstart）不算
+ *   - 從背景切回來、接電話後，聲音常被卡在暫停狀態，所以每次點擊都檢查並喚醒
+ *   - 預設會被側邊的靜音鍵靜音；iOS 17 起可以宣告成「播放媒體」，不受靜音鍵影響
  * 音量設定存在這台裝置（不跟著遊戲存檔），重新開始遊戲也不會被清掉。
  */
 
@@ -62,14 +66,17 @@ export async function initAudio(themeId) {
     files = { music: m.audio?.music ?? {}, sfx: m.audio?.sfx ?? {} };
   } catch { /* 沒有 manifest 就全部用合成聲音 */ }
 
-  const unlock = () => {
-    if (unlocked) return;
-    start();
-    window.removeEventListener('pointerdown', unlock, true);
-    window.removeEventListener('keydown', unlock, true);
+  // 每次點擊都確認聲音在播放中（第一次就啟動；之後被系統暫停了就喚醒）
+  const wake = () => {
+    if (!unlocked) { start(); return; }
+    if (ctx && ctx.state !== 'running' && document.visibilityState === 'visible') {
+      ctx.resume().catch(() => {});
+      if (musicEl && settings.music > 0) musicEl.play().catch(() => {});
+    }
   };
-  window.addEventListener('pointerdown', unlock, true);
-  window.addEventListener('keydown', unlock, true);
+  for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) {
+    window.addEventListener(ev, wake, { capture: true, passive: true });
+  }
 
   // 切到背景時暫停，回來再繼續
   document.addEventListener('visibilitychange', () => {
@@ -78,7 +85,8 @@ export async function initAudio(themeId) {
       ctx.suspend();
       musicEl?.pause();
     } else {
-      ctx.resume();
+      // iOS 可能不允許在這裡恢復；不行的話，下一次點擊時會再喚醒
+      ctx.resume().catch(() => {});
       if (musicEl && settings.music > 0) musicEl.play().catch(() => {});
     }
   });
@@ -94,8 +102,19 @@ export async function initAudio(themeId) {
 function start() {
   const AC = window.AudioContext ?? /** @type {any} */ (window).webkitAudioContext;
   if (!AC) return;
+  // iOS 17+：宣告為播放媒體，側邊靜音鍵打開時也聽得到（像影片一樣）
+  try {
+    const session = /** @type {any} */ (navigator).audioSession;
+    if (session) session.type = 'playback';
+  } catch { /* 不支援就算了 */ }
   ctx = new AC();
   unlocked = true;
+  // iOS 的解鎖方式：在使用者點擊的當下播一段無聲的聲音
+  const silent = ctx.createBuffer(1, 1, 22050);
+  const s0 = ctx.createBufferSource();
+  s0.buffer = silent;
+  s0.connect(ctx.destination);
+  s0.start(0);
   master = ctx.createGain();
   master.gain.value = 3.2; // 合成的聲音本身很輕，整體拉高；壓縮器會擋住疊加時的爆音
   // 避免多個聲音疊在一起時爆音
@@ -118,7 +137,7 @@ function start() {
   reverbSend.gain.value = 0.32;
   reverbSend.connect(reverb).connect(musicBus);
 
-  ctx.resume();
+  ctx.resume().catch(() => {});
   preloadSfx();
   startMusic();
 }
