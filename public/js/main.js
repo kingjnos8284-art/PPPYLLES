@@ -148,7 +148,9 @@ function bindInput(canvas) {
       const now = Date.now();
       const r = tapLandPet(state, hit.type, now);
       const pos = scene.petReact(hit.type, r.ok);
-      if (r.ok) { sfx(getLandPet(hit.type).kind); sfx('buy'); } else sfx('heart');
+      // 每次點都會叫；有獎勵時再加上珍珠的聲音
+      sfx(getLandPet(hit.type).kind);
+      if (r.ok) sfx('buy');
       if (pos) {
         if (r.ok) scene.floatText(pos.x, pos.y, `+${fmt(r.reward)}`);
         else scene.floatText(pos.x, pos.y, '♥', '#ff9ac0');
