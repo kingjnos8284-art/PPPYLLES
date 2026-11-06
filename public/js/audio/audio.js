@@ -335,7 +335,6 @@ const SYNTH = {
       tone({ type: 'sawtooth', f: 330, f2: 190, at: t + d, dur: 0.12, vol: 0.06, attack: 0.01 });
       noise({ at: t + d, dur: 0.1, vol: 0.05, from: 900, to: 400 });
     }
-    SYNTH.heart(t + 0.35);
   },
   // 愛心：輕輕的叮
   heart: (t) => {
@@ -375,7 +374,6 @@ function meow(t) {
   osc.connect(f).connect(g).connect(sfxBus);
   osc.start(t);
   osc.stop(t + 0.5);
-  SYNTH.heart(t + 0.32);
 }
 
 // ───────────────────────────── 音樂 ─────────────────────────────
