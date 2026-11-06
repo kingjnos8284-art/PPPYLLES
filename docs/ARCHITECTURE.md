@@ -29,6 +29,7 @@ public/
       local.js               目前使用：瀏覽器本機存檔
       remote.js              預留：線上伺服器
       index.js               切換 local / remote
+    audio/                 音樂與音效（有檔案播檔案，沒有就即時合成）
     render/                畫面
       scene.js               水族箱繪製、魚的游動、點擊判定
       placeholder.js         占位圖（無美術時使用）

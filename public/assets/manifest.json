@@ -463,5 +463,27 @@
       },
       "price": 500000
     }
+  },
+  "audio": {
+    "music": {
+      "forest": null,
+      "stellar": null
+    },
+    "sfx": {
+      "tap": null,
+      "open": null,
+      "close": null,
+      "buy": null,
+      "fail": null,
+      "newFish": null,
+      "select": null,
+      "grow": null,
+      "release": null,
+      "cat": null,
+      "dog": null,
+      "heart": null,
+      "offline": null,
+      "unlock": null
+    }
   }
 }

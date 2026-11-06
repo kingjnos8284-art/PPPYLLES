@@ -7,6 +7,7 @@ import { fishThumb, petThumb } from '../render/thumb.js';
 import { el, fmt, fmtRate, fmtDuration, coinIcon } from './dom.js';
 import { openSheet, replaceSheetContent, closeSheet, currentSheet } from './sheet.js';
 import { toast } from './toast.js';
+import { sfx, getVolumes, setVolume } from '../audio/audio.js';
 
 /**
  * 各個面板。所有面板都透過 GameContext 讀寫遊戲，不直接碰存檔或畫面細節。
@@ -80,8 +81,9 @@ export function openShop(tab) {
               disabled: !canBuy || undefined,
               onclick: () => {
                 const r = buyFish(G.getState(), sp.id);
-                if (!r.ok) { toast(r.reason); return; }
+                if (!r.ok) { sfx('fail'); toast(r.reason); return; }
                 G.commit();
+                sfx('buy');
                 openReveal(r.fish.uid);
               },
             }, [coinIcon(), priceLabel(sp.price)]),
@@ -108,8 +110,10 @@ export function openShop(tab) {
               disabled: state.coins < priceOf(p.price) || undefined,
               onclick: () => {
                 const r = buyLandPet(G.getState(), p.id);
-                if (!r.ok) { toast(r.reason ?? ''); return; }
+                if (!r.ok) { sfx('fail'); toast(r.reason ?? ''); return; }
                 G.commit();
+                sfx('buy');
+                sfx(p.kind);
                 toast(`${p.name} 搬進了房間！點牠可以互動`);
                 replaceSheetContent(render());
               },
@@ -175,8 +179,9 @@ function decorList(refresh) {
           disabled: state.coins < priceOf(t.price) || undefined,
           onclick: async () => {
             const r = buyTheme(G.getState(), t.id, t.price);
-            if (!r.ok) { toast(r.reason ?? ''); return; }
+            if (!r.ok) { sfx('fail'); toast(r.reason ?? ''); return; }
             G.commit();
+            sfx('unlock');
             await G.setTheme(t.id);
             toast(`解鎖了「${t.name}」！`);
             refresh();
@@ -204,6 +209,7 @@ export function openReveal(uid) {
   const f = G.getState().fish.find((x) => x.uid === uid);
   if (!f) return;
   const sp = getSpecies(f.species);
+  sfx('newFish');
   const node = el('div', { class: 'reveal' }, [
     el('div', { class: 'reveal-hero' }, [fishThumb(sp.id, 170, 170)]),
     el('div', { class: 'reveal-title' }, [`${sp.name} 來到了水族箱！`]),
@@ -296,6 +302,7 @@ export function openFishInfo(uid) {
                 G.commit();
                 G.onReleased(uid);
                 closeSheet();
+                sfx('release');
                 toast(`${sp.name} 回到了大海，祝牠一路順風`);
               },
             }, ['放生']),
@@ -345,12 +352,13 @@ function row(label, value) {
 export function openOffline(r) {
   stopLive();
   const capped = r.awaySec > r.countedSec + 1;
+  sfx('offline');
   openSheet('offline', '歡迎回來', el('div', { class: 'reveal' }, [
     el('div', { class: 'muted' }, [`你離開了 ${fmtDuration(r.awaySec)}，水族箱裡的夥伴們幫你累積了`]),
     el('div', { class: 'offline-amount' }, [coinIcon(), `+${fmt(r.earned)}`]),
     capped ? el('div', { class: 'muted' }, [`（離線收益最多計算 ${BALANCE.offlineCapHours} 小時）`]) : null,
     el('button', { class: 'primary-btn nine-btn', onclick: closeSheet }, ['收下']),
-  ]));
+  ]), { silent: true });
 }
 
 // ================= 裝飾（預留） =================
@@ -371,6 +379,7 @@ export function openSettings(opts) {
   openSheet('settings', '設定', el('div', {}, [
     el('div', { class: 'about-title' }, ['PPPYLLES']),
     TEST_MODE.enabled && TEST_MODE.tools ? testTools() : null,
+    volumeBlock(),
     el('div', { class: 'stat-rows' }, [
       row('累計獲得資源', fmt(state.totalEarned)),
       row('水族箱夥伴', `${state.fish.length} 隻`),
@@ -388,6 +397,32 @@ export function openSettings(opts) {
       : null,
     resetBlock(),
   ]));
+}
+
+/** 音樂、音效音量（存在這台裝置，不跟著存檔） */
+function volumeBlock() {
+  const v = getVolumes();
+  /** @param {'music'|'sfx'} kind @param {string} label */
+  const slider = (kind, label) => {
+    const val = el('span', { class: 'vol-val' }, [volText(v[kind])]);
+    const input = el('input', {
+      type: 'range', min: 0, max: 100, step: 5, value: Math.round(v[kind] * 100),
+      class: 'vol-range', 'aria-label': label,
+      oninput: () => {
+        const x = Number(input.value) / 100;
+        setVolume(kind, x);
+        val.textContent = volText(x);
+      },
+      onchange: () => { if (kind === 'sfx') sfx('buy'); },
+    });
+    return el('label', { class: 'vol-row' }, [el('span', { class: 'vol-label' }, [label]), input, val]);
+  };
+  return el('div', { class: 'vol-block' }, [slider('music', '音樂'), slider('sfx', '音效')]);
+}
+
+/** @param {number} x */
+function volText(x) {
+  return x <= 0 ? '關閉' : `${Math.round(x * 100)}%`;
 }
 
 /**
@@ -437,6 +472,7 @@ export function openStarterPick() {
         if (!adoptStarterPet(G.getState(), p.id)) return;
         G.commit();
         closeSheet();
+        sfx(p.kind);
         toast(`${p.name} 搬進了房間！點水母或 ${p.name} 看看`);
       },
     }, ['就是牠']),

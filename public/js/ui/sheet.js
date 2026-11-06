@@ -1,5 +1,6 @@
 // @ts-check
 import { $ } from './dom.js';
+import { sfx } from '../audio/audio.js';
 
 /**
  * 面板（手機為底部抽屜，桌機為置中視窗）。同一時間只開一個。
@@ -21,10 +22,11 @@ let locked = false;
  * @param {string} id
  * @param {string} heading
  * @param {Node} content
- * @param {{ onClose?: () => void, locked?: boolean }} [opts]
+ * @param {{ onClose?: () => void, locked?: boolean, silent?: boolean }} [opts]
  */
 export function openSheet(id, heading, content, opts = {}) {
   if (locked && id !== currentId) return;
+  if (!currentId && !opts.silent) sfx('open');
   if (currentId && onCloseCb) onCloseCb();
   locked = !!opts.locked;
   sheet.classList.toggle('is-locked', locked);
@@ -46,6 +48,7 @@ export function replaceSheetContent(content) {
 
 export function closeSheet() {
   if (!currentId) return;
+  sfx('close');
   locked = false;
   sheet.classList.remove('is-locked');
   sheet.hidden = true;

@@ -14,6 +14,7 @@ import {
   initPanels, openStarterPick, openShop, openCodex, openDecor, openSettings, openFishInfo, openOffline, currentSheet,
 } from './ui/panels.js';
 import { toast } from './ui/toast.js';
+import { initAudio, setAudioTheme, sfx } from './audio/audio.js';
 import { $, fmt } from './ui/dom.js';
 
 const VERSION = '0.1.0';
@@ -71,7 +72,8 @@ async function boot() {
 
   const canvas = /** @type {HTMLCanvasElement} */ ($('stage'));
   scene = new Scene(canvas, () => state, assets);
-  scene.onGrownUp = (f) => toast(`${getSpecies(f.species).name} 長大了！`);
+  scene.onGrownUp = (f) => { sfx('grow'); toast(`${getSpecies(f.species).name} 長大了！`); };
+  initAudio(state.theme);
 
   initPanels({
     getState: () => state,
@@ -81,7 +83,7 @@ async function boot() {
       await backend.save.clear();
       state = newGame(Date.now());
       // 重新開始時背景也回到預設
-      if (assets.theme !== state.theme) { await assets.setTheme(state.theme); scene.resize(); }
+      if (assets.theme !== state.theme) { await assets.setTheme(state.theme); scene.resize(); setAudioTheme(state.theme); }
       commit();
     },
     themes: () => assets.themes,
@@ -89,6 +91,7 @@ async function boot() {
       const ok = await assets.setTheme(id);
       if (!ok) return;
       state.theme = id;
+      setAudioTheme(id);
       scene.resize();
       commit();
     },
@@ -139,11 +142,13 @@ function bindInput(canvas) {
     const hit = scene.hitTest(e.clientX, e.clientY);
     if (!hit) return;
     if (hit.kind === 'fish') {
+      sfx('select');
       openFishInfo(hit.uid);
     } else {
       const now = Date.now();
       const r = tapLandPet(state, hit.type, now);
       const pos = scene.petReact(hit.type, r.ok);
+      if (r.ok) { sfx(getLandPet(hit.type).kind); sfx('buy'); } else sfx('heart');
       if (pos) {
         if (r.ok) scene.floatText(pos.x, pos.y, `+${fmt(r.reward)}`);
         else scene.floatText(pos.x, pos.y, '♥', '#ff9ac0');
