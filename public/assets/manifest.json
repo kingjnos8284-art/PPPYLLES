@@ -186,17 +186,7 @@
   },
   "decor": {},
   "ui": {
-    "heartBubble": "pets/heart-bubble-v1.png",
-    "crown": {
-      "src": "ui/crown-pixel-v1.png",
-      "frames": 1,
-      "bounds": {
-        "x": 0,
-        "y": 0,
-        "w": 17,
-        "h": 14
-      }
-    }
+    "heartBubble": "pets/heart-bubble-v1.png"
   },
   "themes": {
     "forest": {

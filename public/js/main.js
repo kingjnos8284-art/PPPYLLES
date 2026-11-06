@@ -71,7 +71,7 @@ async function boot() {
 
   const canvas = /** @type {HTMLCanvasElement} */ ($('stage'));
   scene = new Scene(canvas, () => state, assets);
-  scene.onGrownUp = (f) => toast(`${getSpecies(f.species).name} 長大了！戴上了王冠 👑`);
+  scene.onGrownUp = (f) => toast(`${getSpecies(f.species).name} 長大了！`);
 
   initPanels({
     getState: () => state,

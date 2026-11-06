@@ -32,7 +32,6 @@ import { drawFishPlaceholder, drawLandPetPlaceholder, hexA } from './placeholder
  * @property {string} species
  * @property {number} L
  * @property {boolean} adult
- * @property {number} crownAt   戴上王冠的時間（播放登場動畫用）；-1 表示還沒戴
  */
 
 /**
@@ -464,17 +463,15 @@ export class Scene {
           dying: -1,
           L: 0,
           adult: stageOf(d) === 'adult',
-          crownAt: stageOf(d) === 'adult' ? -10 : -1,
         };
         this.pickTarget(e);
         this.fish.set(d.uid, e);
       }
       e.L = getSpecies(d.species).size * this.unit * BALANCE.creatureScale * growthScale(d);
       this.assets.requestFish(d.species);
-      // 剛長大：戴上王冠，冒出閃光
+      // 剛長大：冒出閃光
       if (!e.adult && stageOf(d) === 'adult') {
         e.adult = true;
-        e.crownAt = this.time;
         for (let i = 0; i < 10; i++) {
           const a = (i / 10) * Math.PI * 2;
           this.particles.push({ x: e.x, y: e.y - e.L * 0.3, vx: Math.cos(a) * 40, vy: Math.sin(a) * 40 - 10, t: 0, kind: 'spark', color: '#ffd25e' });
@@ -801,45 +798,7 @@ export class Scene {
       const fr = Math.floor(Math.max(0, t + f.phase) * sprite.fps) % sprite.frames;
       ({ x: ax, y: ay } = sprite.tops[fr]);
     }
-    let topY = ay * L; // 頭頂（有王冠時為王冠頂端），選取箭頭畫在這上面
-
-    // 成年的王冠：浮在傘頂上方，跟著動畫上下漂浮
-    if (f.adult && f.dying < 0) {
-      const crown = this.assets.crown;
-      const cb = this.assets.crownBounds;
-      // 像素王冠：每一格放大成整數個螢幕像素，保持銳利
-      const px = crown && cb ? Math.max(2, Math.round((L * 0.24) / cb.w)) : 0;
-      const cw = crown && cb ? px * cb.w : Math.max(16, L * 0.36);
-      const since = t - f.crownAt;
-      // 剛戴上時從上方落下、彈一下
-      const pop = since < 0.7 ? 1 + Math.sin(Math.min(1, since / 0.7) * Math.PI) * 0.35 : 1;
-      const drop = since < 0.4 ? (1 - since / 0.4) * L * 0.4 : 0;
-      // 浮在頭頂上方，留一點距離，輕輕上下飄
-      let gap = L * 0.05 + Math.sin(t * 2 + f.phase) * L * 0.015;
-      // 靠近水面時不要讓王冠超出水族箱（往下貼近頭頂）
-      const crownH = crown && cb ? px * cb.h : cw * 0.62;
-      if (this.tankClip) {
-        const minBase = this.tankClip.y + crownH + 3;
-        const base = f.y + ay * L - gap;
-        if (base < minBase) gap -= minBase - base;
-      }
-      topY = ay * L - gap - crownH * pop;
-      ctx.save();
-      ctx.translate(ax * L, ay * L - gap - drop);
-      ctx.scale(pop, pop);
-      if (crown && cb) {
-        // 美術王冠：以王冠底邊中心對齊原點
-        const F = cw * (crown.fw / cb.w);            // 整格要畫多大
-        const baseY = (cb.y + cb.h) / crown.fh - 0.5; // 底邊在格子中的位置（相對中心）
-        const cx = (cb.x + cb.w / 2) / crown.fw - 0.5;
-        ctx.translate(-cx * F, -baseY * F);
-        ctx.imageSmoothingEnabled = false;
-        drawSprite(ctx, crown, F, t + f.phase);
-      } else {
-        drawCrown(ctx, cw, t + f.phase);
-      }
-      ctx.restore();
-    }
+    const topY = ay * L; // 頭頂，選取箭頭畫在這上面
 
     // 選取中：頭頂上方的紅色像素小箭頭，上下跳動
     if (this.selectedUid === f.uid && f.dying < 0) {
@@ -1229,77 +1188,6 @@ function pixelBubble(R) {
   }
   bubbleCache.set(R, c);
   return c;
-}
-
-/**
- * 王冠（金色、三個尖角、寶石，帶光暈與閃光），以底邊中心為原點
- * @param {CanvasRenderingContext2D} ctx @param {number} w 寬度 @param {number} t 時間
- */
-function drawCrown(ctx, w, t) {
-  const h = w * 0.62;
-  ctx.save();
-  // 光暈
-  const glow = ctx.createRadialGradient(0, -h * 0.4, 0, 0, -h * 0.4, w * 0.9);
-  glow.addColorStop(0, 'rgba(255,220,120,.45)');
-  glow.addColorStop(1, 'rgba(255,220,120,0)');
-  ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.arc(0, -h * 0.4, w * 0.9, 0, Math.PI * 2); ctx.fill();
-
-  // 冠身
-  const x0 = -w / 2, x1 = w / 2;
-  ctx.beginPath();
-  ctx.moveTo(x0, 0);
-  ctx.lineTo(x0, -h * 0.55);
-  ctx.lineTo(x0 + w * 0.22, -h * 0.22);
-  ctx.lineTo(0, -h);
-  ctx.lineTo(x1 - w * 0.22, -h * 0.22);
-  ctx.lineTo(x1, -h * 0.55);
-  ctx.lineTo(x1, 0);
-  ctx.closePath();
-  const g = ctx.createLinearGradient(0, -h, 0, 0);
-  g.addColorStop(0, '#fff3b0');
-  g.addColorStop(0.45, '#ffcf3f');
-  g.addColorStop(1, '#d9901a');
-  ctx.fillStyle = g;
-  ctx.fill();
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = Math.max(1.2, w * 0.07);
-  ctx.strokeStyle = '#8a4f0c';
-  ctx.stroke();
-
-  // 底部飾帶
-  ctx.fillStyle = 'rgba(255,255,255,.35)';
-  ctx.fillRect(x0 + w * 0.06, -h * 0.2, w * 0.88, h * 0.07);
-
-  // 尖角上的小珠子
-  ctx.fillStyle = '#fff6cf';
-  for (const [px, py] of [[x0, -h * 0.55], [0, -h], [x1, -h * 0.55]]) {
-    ctx.beginPath(); ctx.arc(px, py, w * 0.075, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#8a4f0c'; ctx.lineWidth = Math.max(1, w * 0.035); ctx.stroke();
-  }
-  // 寶石
-  const gem = (/** @type {number} */ x, /** @type {string} */ c, /** @type {number} */ r) => {
-    ctx.beginPath(); ctx.arc(x, -h * 0.36, r, 0, Math.PI * 2);
-    ctx.fillStyle = c; ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.75)';
-    ctx.beginPath(); ctx.arc(x - r * 0.3, -h * 0.36 - r * 0.3, r * 0.35, 0, Math.PI * 2); ctx.fill();
-  };
-  gem(-w * 0.27, '#4fb7ff', w * 0.07);
-  gem(0, '#ff4f78', w * 0.1);
-  gem(w * 0.27, '#4fb7ff', w * 0.07);
-
-  // 閃光（每隔一段時間一閃）
-  const k = (t * 0.45) % 1;
-  if (k < 0.18) {
-    const a = Math.sin((k / 0.18) * Math.PI);
-    const sx = -w * 0.32 + (k / 0.18) * w * 0.64, sy = -h * 0.62;
-    ctx.globalAlpha *= a;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = Math.max(1, w * 0.04);
-    const r = w * 0.18;
-    ctx.beginPath(); ctx.moveTo(sx - r, sy); ctx.lineTo(sx + r, sy); ctx.moveTo(sx, sy - r); ctx.lineTo(sx, sy + r); ctx.stroke();
-  }
-  ctx.restore();
 }
 
 /** @type {WeakMap<HTMLImageElement, number[]>} */
