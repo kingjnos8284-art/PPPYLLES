@@ -148,8 +148,7 @@ function bindInput(canvas) {
       const now = Date.now();
       const r = tapLandPet(state, hit.type, now);
       const pos = scene.petReact(hit.type, r.ok);
-      // 每次點都會叫；有獎勵時再加上珍珠的聲音
-      sfx(getLandPet(hit.type).kind);
+      // 點貓狗本身沒有聲音；有獎勵時播珍珠的聲音
       if (r.ok) sfx('buy');
       if (pos) {
         if (r.ok) scene.floatText(pos.x, pos.y, `+${fmt(r.reward)}`);
